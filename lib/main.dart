@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:meter_scan/constant/constant.dart';
-import 'package:meter_scan/view/splash_screen/splash_screen.dart';
+import 'package:meter_scan/view/login_screen/login_screen.dart';
 
 void main() {
 
@@ -17,15 +17,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
-        textTheme: GoogleFonts.latoTextTheme(Theme.of(context).textTheme,),
-        primaryTextTheme: GoogleFonts.latoTextTheme(Theme.of(context).textTheme),
+        textTheme: GoogleFonts.montserratTextTheme(Theme.of(context).textTheme,),
+        primaryTextTheme: GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
         primarySwatch: createMaterialColor(themeColor1),
         buttonTheme:const ButtonThemeData(
           buttonColor: themeColor1,
         ),
         useMaterial3: true,
       ),
-      home:const SplashScreen(),
+      home:const LoginScreen(),
     );
   }
   MaterialColor createMaterialColor(Color color) {
