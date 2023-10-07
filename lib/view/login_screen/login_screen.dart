@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/generated/assets.dart';
+import 'package:meter_scan/view/main_screen/main_screen.dart';
 import 'package:meter_scan/widget/CustomCheckboxWithForgetPassword.dart';
 import 'package:meter_scan/widget/MeterScanButton.dart';
 import 'package:meter_scan/widget/MeterScanTextField.dart';
@@ -56,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onForgetPasswordTap: () {},
                 ),
                 SizedBox(height: width * 0.05,),
-                MeterScanButton(onTap: (){}, width: width, label: "Login"),
+                MeterScanButton(onTap: ()=>Get.to(const MainScreen()), width: width, label: "Login"),
                 SizedBox(height: width * 0.05,),
               ],
             ),
