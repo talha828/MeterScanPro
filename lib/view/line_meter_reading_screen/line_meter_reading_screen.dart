@@ -1,10 +1,10 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:meter_scan/backend/database/sqflite.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/generated/assets.dart';
@@ -28,6 +28,33 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
   bool loading = false;
   String newReading = "11";
   var file;
+  insertData()async{
+    if(reading.text.isNotEmpty){
+      if(date.text.isNotEmpty){
+        if(file !=null){
+          final record = {
+            'line_name': widget.line.lineName,
+            'meter_reading': int.parse(reading.text),
+            'meter_image': file.path,
+            'date_string': date.text,
+            'line_id': int.parse(widget.line.lineId.toString()),
+            'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+          };
+
+// Insert the record into the database
+          await SqfliteDatabase.insertLineRecord(record);
+        }else{
+          Get.snackbar("Image not found", "Please Take a Image");
+        }
+      }else{
+        Get.snackbar("Date not found", "Please insert a date");
+      }
+    }else{
+      Get.snackbar("Reading not Found", "Please insert a reading");
+    }
+  }
+
+
   getImage() async {
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
     if (photo != null) {

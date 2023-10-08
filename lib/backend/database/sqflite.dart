@@ -74,6 +74,31 @@ class SqfliteDatabase {
                 FOREIGN KEY (line_id) REFERENCES line_master(line_id)
               )
             ''');
+
+        await db.execute('''
+          CREATE TABLE customer_records(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            customer_name TEXT,
+            customer_id TEXT,
+            meter_reading REAL,
+            meter_image TEXT,
+            date_string TEXT,
+            line_id INTEGER,
+            timestamp TEXT
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE line_records(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            line_name TEXT,
+            meter_reading REAL,
+            meter_image TEXT,
+            date_string TEXT,
+            line_id INTEGER,
+            timestamp TEXT
+          )
+        ''');
       },
     );
   }
@@ -123,5 +148,13 @@ class SqfliteDatabase {
       lineMaster: lineMasterList.map((e) => LineMaster.fromJson(e)).toList(),
       lineDetail: lineDetailList.map((e) => LineDetail.fromJson(e)).toList(),
     );
+  }
+  static Future<int> insertCustomerRecord(Map<String, dynamic> record) async {
+    final db = await database;
+    return await db.insert("customer_records", record);
+  }
+  static Future<int> insertLineRecord(Map<String, dynamic> record) async {
+    final db = await database;
+    return await db.insert("line_records", record);
   }
 }

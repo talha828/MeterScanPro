@@ -16,7 +16,8 @@ class CustomerScreen extends StatefulWidget {
 
 class _CustomerScreenState extends State<CustomerScreen> {
   final masterData = Get.find<MasterController>();
-  List<CustomerMaster?> customerNamesForSpecificLine = [];
+  List<CustomerModel?> customerNamesForSpecificLine = [];
+  List<CustomerModel?> customerNames = [];
   @override
   void initState() {
     super.initState();
@@ -24,20 +25,21 @@ class _CustomerScreenState extends State<CustomerScreen> {
   }
 
   getCustomer() {
-    setState(() {
-      List<int?> customerIdsForSpecificLine = masterData
-          .masterData.value.customerDetail!
-          .where(
-              (customerLine) => customerLine.lineId == widget.lineMaster.lineId)
-          .map((customerLine) => customerLine.customerId)
-          .toList();
-      customerNamesForSpecificLine = masterData.masterData.value.customerMaster!
-          .where((customer) =>
-              customerIdsForSpecificLine.contains(customer.customerId))
-          .map((customer) => customer)
-          .toList();
-    });
+    List<CustomerTempModel> customerIdsForSpecificLine = masterData.masterData.value.customerDetail!
+        .where((customerLine) => customerLine.lineId == widget.lineMaster.lineId)
+        .map((customerLine) => CustomerTempModel(customerId: customerLine.customerId, meterNo: int.tryParse(customerLine.meterNo!) ?? 0,lineId:int.tryParse(customerLine.lineId.toString()) ?? 0 ))
+        .toList();
+    print('customerIdsForSpecificLine: $customerIdsForSpecificLine');
+    customerNamesForSpecificLine = masterData.masterData.value.customerMaster!
+        .where((customer) => customerIdsForSpecificLine.any((element) => element.customerId == customer.customerId))
+        .map((customer) {
+      var matchingCustomer = customerIdsForSpecificLine.firstWhere((element) => element.customerId == customer.customerId);
+      return CustomerModel(customerId: customer.customerId.toString(), customerName: customer.customerName!, meterNo: matchingCustomer.meterNo.toString(),lineId:matchingCustomer.lineId.toString() );
+    })
+        .toList();
+    print('customerNamesForSpecificLine: $customerNamesForSpecificLine');
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +64,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
                   shrinkWrap: true,
                   itemBuilder: (context, index) {
                     return ListTile(
-                      leading: Text(customerNamesForSpecificLine[index]!.customerId!.toString(),style: const TextStyle(fontSize: 24),),
+                      leading: Text(customerNamesForSpecificLine[index]!.meterNo!.toString(),style: const TextStyle(fontSize: 24),),
                       onTap: ()=>Get.to(MeterReadingScreen(customer: customerNamesForSpecificLine[index]!)),
                       title: Text(
                           customerNamesForSpecificLine[index]!.customerName!),
@@ -82,4 +84,30 @@ class _CustomerScreenState extends State<CustomerScreen> {
       ),
     );
   }
+}
+
+class CustomerModel {
+  final String customerId;
+  final String customerName;
+  final String meterNo;
+  final String lineId;
+
+  CustomerModel({
+    required this.customerId,
+    required this.customerName,
+    required this.meterNo,
+    required this.lineId,
+  });
+}
+
+class CustomerTempModel {
+  final int? customerId;
+  final int? meterNo;
+  final int? lineId;
+
+  CustomerTempModel({
+    required this.customerId,
+    required this.meterNo,
+    required this.lineId,
+  });
 }
