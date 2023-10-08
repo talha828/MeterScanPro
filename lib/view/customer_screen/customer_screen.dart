@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:meter_scan/backend/getx_model/master_controller.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/constant/constant.dart';
+import 'package:meter_scan/view/line_meter_reading_screen/line_meter_reading_screen.dart';
+import 'package:meter_scan/view/meter_reading_screen/meter_reading_screen.dart';
 
 class CustomerScreen extends StatefulWidget {
   CustomerScreen({super.key, required this.lineMaster});
@@ -41,6 +43,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        floatingActionButton: FloatingActionButton.extended( backgroundColor: themeColor1,onPressed: ()=>Get.to(LineMeterReadingScreen(line: widget.lineMaster)), label:const Text("Line Meter Reading",style: TextStyle(color: Colors.white),)),
         appBar: AppBar(
           backgroundColor: themeColor1,
           title: Text(widget.lineMaster.lineName!,style:const TextStyle(color: Colors.white),),
@@ -59,6 +62,8 @@ class _CustomerScreenState extends State<CustomerScreen> {
                   shrinkWrap: true,
                   itemBuilder: (context, index) {
                     return ListTile(
+                      leading: Text(customerNamesForSpecificLine[index]!.customerId!.toString(),style: const TextStyle(fontSize: 24),),
+                      onTap: ()=>Get.to(MeterReadingScreen(customer: customerNamesForSpecificLine[index]!)),
                       title: Text(
                           customerNamesForSpecificLine[index]!.customerName!),
                       trailing: const Icon(Icons.arrow_forward_ios_rounded),

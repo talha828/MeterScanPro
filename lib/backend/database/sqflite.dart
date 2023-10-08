@@ -64,6 +64,16 @@ class SqfliteDatabase {
                 FOREIGN KEY (line_id) REFERENCES line_master(line_id)
               )
             ''');
+
+        await db.execute('''
+              CREATE TABLE save_customer_record (
+                line_id INTEGER,
+                meter_id INTEGER,
+                meter_name TEXT,
+                meter_power INTEGER,
+                FOREIGN KEY (line_id) REFERENCES line_master(line_id)
+              )
+            ''');
       },
     );
   }

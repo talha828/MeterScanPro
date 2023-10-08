@@ -15,8 +15,13 @@ class FetchDataScreen extends StatefulWidget {
 }
 
 class _FetchDataScreenState extends State<FetchDataScreen> {
+  bool flag = false;
 
-
+  setLoading(bool value){
+    setState(() {
+      flag = value;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     final LoadingController loadingController = Get.put(LoadingController());
@@ -51,13 +56,16 @@ class _FetchDataScreenState extends State<FetchDataScreen> {
                     ),
                   ),
                   MeterScanButton(
-                      onTap: () => Api.collectMasterDetails(),
+                      onTap: () {
+                        setLoading(true);
+                        Api.collectMasterDetails().catchError((onError){setLoading(false);});
+                      },
                       width: width,
                       label: "Fetch All Data"),
                 ],
               ),
             ),
-            loadingController.myFlag.value
+            flag
                 ? Container(
                     color: Colors.white.withOpacity(0.7),
                     child: const Center(
