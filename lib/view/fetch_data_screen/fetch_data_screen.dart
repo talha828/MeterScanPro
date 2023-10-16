@@ -16,6 +16,7 @@ class FetchDataScreen extends StatefulWidget {
 
 class _FetchDataScreenState extends State<FetchDataScreen> {
   bool flag = false;
+  final LoadingController loadingController = Get.put(LoadingController());
 
   setLoading(bool value){
     setState(() {
@@ -24,7 +25,6 @@ class _FetchDataScreenState extends State<FetchDataScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    final LoadingController loadingController = Get.put(LoadingController());
     var width = MediaQuery.of(context).size.width;
     return SafeArea(
       child: Scaffold(
