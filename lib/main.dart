@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/view/fetch_data_screen/fetch_data_screen.dart';
+import 'package:meter_scan/view/login_screen/login_screen.dart';
 import 'package:meter_scan/view/main_screen/main_screen.dart';
 
 void main() {
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget{
         ),
         useMaterial3: true,
       ),
-      home:const FetchDataScreen(),
+      home:const LoginScreen(),
     );
   }
   MaterialColor createMaterialColor(Color color) {

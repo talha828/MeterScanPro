@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:meter_scan/backend/getx_model/master_controller.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/backend/model/CustomerCombineModel.dart';
@@ -18,6 +19,17 @@ class CustomerScreen extends StatefulWidget {
 class _CustomerScreenState extends State<CustomerScreen> {
   final masterData = Get.find<MasterController>();
   List<CustomerCombined> customerNamesForSpecificLine = [];
+  TextEditingController search = TextEditingController();
+  List<CustomerCombined> filteredList = [];
+  void filterList(String query) {
+    filteredList = customerNamesForSpecificLine
+        .where((line) =>
+            line.customerName!.toLowerCase().contains(query.toLowerCase()) ||
+            line.customerId.toString().contains(query))
+        .toList();
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -41,7 +53,9 @@ class _CustomerScreenState extends State<CustomerScreen> {
     }
 
     setState(() {
-      customerNamesForSpecificLine = getCustomersByLineId(mergedCustomers,widget.lineMaster.lineId!);
+      customerNamesForSpecificLine =
+          getCustomersByLineId(mergedCustomers, widget.lineMaster.lineId!);
+      filteredList = customerNamesForSpecificLine;
       print(customerNamesForSpecificLine.length);
       print(widget.lineMaster.lineId);
     });
@@ -49,11 +63,16 @@ class _CustomerScreenState extends State<CustomerScreen> {
 
   List<CustomerCombined> getCustomersByLineId(
       List<CustomerCombined> customers, int specificLineId) {
-    return customers.where((customer) => customer.lineId == specificLineId).toList();
+    final filteredList = customers
+        .where((customer) => customer.lineId == specificLineId)
+        .toList();
+    filteredList.sort((a, b) => a.customerId!.compareTo(b.customerId!));
+    return filteredList;
   }
 
   @override
   Widget build(BuildContext context) {
+    var width = MediaQuery.of(context).size.width;
     return SafeArea(
       child: Scaffold(
         floatingActionButton: FloatingActionButton.extended(
@@ -78,36 +97,64 @@ class _CustomerScreenState extends State<CustomerScreen> {
             onPressed: () => Get.back(),
           ),
         ),
-        body: customerNamesForSpecificLine.isNotEmpty
-            ? SingleChildScrollView(
-                child: ListView.separated(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        leading: Text(
-                          customerNamesForSpecificLine[index]!
-                              .meterNo!
-                              .toString(),
-                          style: const TextStyle(fontSize: 24),
+        body:
+            SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      margin: EdgeInsets.symmetric(vertical: width * 0.04,horizontal: width * 0.04),
+                      decoration: BoxDecoration(
+                        // color: Colors.grey,
+                        border: Border.all(color: themeColor1),
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      width: width * 0.8,
+                      child: TextField(
+                        controller: search,
+                        onChanged: (query) => filterList(query),
+                        decoration: InputDecoration(
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 20),
+                          hintText: "Search Line Here",
+                          hintStyle: GoogleFonts.montserrat(
+                            textStyle: TextStyle(
+                              fontSize: width * 0.04,
+                            ),
+                          ),
+                          border: InputBorder.none,
                         ),
-                        onTap: () => Get.to(MeterReadingScreen(
-                            customer: customerNamesForSpecificLine[index]!)),
-                        title: Text(
-                            customerNamesForSpecificLine[index]!.customerName!),
-                        trailing: const Icon(Icons.arrow_forward_ios_rounded),
-                      );
-                    },
-                    separatorBuilder: (context, index) {
-                      return const Divider(
-                        height: 1,
-                      );
-                    },
-                    itemCount: customerNamesForSpecificLine.isNotEmpty
-                        ? customerNamesForSpecificLine.length
-                        : 0),
+                      ),
+                    ),
+                    filteredList.isNotEmpty ? ListView.separated(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            leading: SizedBox(
+                              width: width * 0.13,
+                              child: Text(
+                                filteredList[index]!.meterNo!.toString(),
+                                style: TextStyle(fontSize: width * 0.05),
+                              ),
+                            ),
+                            onTap: () => Get.to(MeterReadingScreen(
+                                customer: filteredList[index]!)),
+                            title: Text(filteredList[index]!.customerName!),
+                            trailing:
+                                const Icon(Icons.arrow_forward_ios_rounded),
+                          );
+                        },
+                        separatorBuilder: (context, index) {
+                          return const Divider(
+                            height: 1,
+                          );
+                        },
+                        itemCount:
+                            filteredList.isNotEmpty ? filteredList.length : 0): const Center(child: CircularProgressIndicator()),
+                  ],
+                ),
               )
-            : const Center(child: CircularProgressIndicator()),
       ),
     );
   }
