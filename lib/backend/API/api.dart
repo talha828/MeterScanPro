@@ -4,6 +4,7 @@ import 'package:meter_scan/backend/getx_model/loading_controller.dart';
 import 'dart:io';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/backend/database/sqflite.dart';
+import 'package:meter_scan/backend/model/UserModel.dart';
 import 'package:meter_scan/view/login_screen/login_screen.dart';
 
 const basicUrl =
@@ -47,8 +48,23 @@ class Api {
              SqfliteDatabase.insertLineDetail(lineDetail);
            }
            print("===== data storing completed =======");
-           Get.to(const LoginScreen());
-           loadingController.toggleFlag(false);
+           print("===== Call user Data Api =======");
+           try {
+             final response = await _dio.get('http://erp.convexconsulting.com.pk:9999/ords/ws/data/login/');
+             if (response.statusCode == 200) {
+               print("===== SetUp Model =======");
+               final List<dynamic> data = response.data['items'];
+               List<UserModel> users = data.map((json) => UserModel.fromJson(json)).toList();
+               SqfliteDatabase.insertAllUsers(users);
+               Get.to(const LoginScreen());
+               loadingController.toggleFlag(false);
+             } else {
+               throw Exception('Failed to load user data');
+             }
+           } catch (e) {
+             throw Exception('Failed to load user data: $e');
+           }
+
          }
         } else {
          loadingController.toggleFlag(false);
@@ -76,3 +92,4 @@ class Api {
     }
   }
 }
+

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:meter_scan/backend/database/sqflite.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
+import 'package:meter_scan/backend/model/CustomerCombineModel.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/generated/assets.dart';
 import 'package:meter_scan/view/customer_screen/customer_screen.dart';
@@ -14,7 +15,7 @@ import 'package:meter_scan/widget/MeterScanButton.dart';
 import 'package:meter_scan/widget/MeterScanTextField.dart';
 
 class MeterReadingScreen extends StatefulWidget {
-  final CustomerModel customer;
+  final CustomerCombined customer;
   const MeterReadingScreen({required this.customer, super.key});
 
   @override
@@ -41,7 +42,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
             'meter_reading': int.parse(reading.text),
             'meter_image': file.path,
             'date_string': date.text,
-            'line_id': int.parse(widget.customer.lineId),
+            'line_id': int.parse(widget.customer.lineId.toString()),
             'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
           };
 

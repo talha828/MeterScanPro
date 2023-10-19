@@ -1,5 +1,9 @@
+import 'package:get/get.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
+import 'package:meter_scan/backend/model/UserModel.dart';
+import 'package:meter_scan/view/main_screen/main_screen.dart';
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SqfliteDatabase {
@@ -99,10 +103,22 @@ class SqfliteDatabase {
             timestamp TEXT
           )
         ''');
+
+        await db.execute('''
+      CREATE TABLE users(
+        cmuser_app_id INTEGER PRIMARY KEY,
+        full_name TEXT,
+        user_name TEXT,
+        password TEXT,
+        status TEXT
+      )
+    ''');
       },
     );
   }
-  static Future<void> insertCustomerMaster(CustomerMaster customerMaster) async {
+
+  static Future<void> insertCustomerMaster(
+      CustomerMaster customerMaster) async {
     final db = await database;
     await db.insert(
       'customer_master',
@@ -110,7 +126,9 @@ class SqfliteDatabase {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
-  static Future<void> insertCustomerDetail(CustomerDetail customerDetail) async {
+
+  static Future<void> insertCustomerDetail(
+      CustomerDetail customerDetail) async {
     final db = await database;
     await db.insert(
       'customer_detail',
@@ -118,6 +136,7 @@ class SqfliteDatabase {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+
   static Future<void> insertLineMaster(LineMaster lineMaster) async {
     final db = await database;
     await db.insert(
@@ -126,6 +145,7 @@ class SqfliteDatabase {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+
   static Future<void> insertLineDetail(LineDetail lineDetail) async {
     final db = await database;
     await db.insert(
@@ -134,6 +154,7 @@ class SqfliteDatabase {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+
   static Future<CustomerAndLineModel> fetchAllData() async {
     final db = await database;
 
@@ -143,18 +164,69 @@ class SqfliteDatabase {
     final lineDetailList = await db.query('line_detail');
 
     return CustomerAndLineModel(
-      customerMaster: customerMasterList.map((e) => CustomerMaster.fromJson(e)).toList(),
-      customerDetail: customerDetailList.map((e) => CustomerDetail.fromJson(e)).toList(),
+      customerMaster:
+          customerMasterList.map((e) => CustomerMaster.fromJson(e)).toList(),
+      customerDetail:
+          customerDetailList.map((e) => CustomerDetail.fromJson(e)).toList(),
       lineMaster: lineMasterList.map((e) => LineMaster.fromJson(e)).toList(),
       lineDetail: lineDetailList.map((e) => LineDetail.fromJson(e)).toList(),
     );
   }
+
   static Future<int> insertCustomerRecord(Map<String, dynamic> record) async {
     final db = await database;
     return await db.insert("customer_records", record);
   }
+
   static Future<int> insertLineRecord(Map<String, dynamic> record) async {
     final db = await database;
     return await db.insert("line_records", record);
+  }
+
+  static Future<void> insertAllUsers(List<UserModel> users) async {
+    final db = await database;
+    final batch = db.batch();
+
+    for (var user in users) {
+      batch.insert('users', user.toJson());
+    }
+
+    await batch.commit();
+  }
+
+  static Future<void> getUser(
+      String? userName, String? password, bool check, var indicator) async {
+    if (userName!.isNotEmpty) {
+      if (password!.isNotEmpty) {
+        indicator(true);
+        final db = await database;
+        final List<Map<String, dynamic>> maps = await db.query('users',
+            where: 'user_name = ? AND password = ?',
+            whereArgs: [userName, password]);
+
+        if (maps.isNotEmpty) {
+          if (check) {
+            SharedPreferences prefer = await SharedPreferences.getInstance();
+            prefer.setString("username", userName);
+            prefer.setString("password", password);
+            indicator(false);
+            Get.to(const MainScreen());
+          } else {
+            indicator(false);
+            Get.to(const MainScreen());
+          }
+        } else {
+          indicator(false);
+          Get.snackbar(
+              "Authentication fail", "Please check your username or password");
+        }
+      } else {
+        indicator(false);
+        Get.snackbar("Password not found", "Please enter your password");
+      }
+    } else {
+      indicator(false);
+      Get.snackbar("userName Not Found", "Please Enter your userName");
+    }
   }
 }

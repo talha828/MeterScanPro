@@ -8,6 +8,7 @@ import 'package:meter_scan/backend/getx_model/master_controller.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/view/customer_screen/customer_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -23,11 +24,23 @@ class _MainScreenState extends State<MainScreen> {
   final masterData = Get.put(MasterController());
 
   loadData() async {
+    SharedPreferences prefer = await SharedPreferences.getInstance();
+    String? username = prefer.getString("username");
+    setState(() {
+      name = convertToTitleCase(username!);
+    });
     masterData.masterData.value = await SqfliteDatabase.fetchAllData();
     filteredList = masterData.masterData.value.lineMaster!;
   }
-
+  String name = "loading";
   List<LineMaster> filteredList = [];
+  String convertToTitleCase(String input) {
+    List<String> parts = input.split('.');
+    for (int i = 0; i < parts.length; i++) {
+      parts[i] = parts[i][0].toUpperCase() + parts[i].substring(1);
+    }
+    return parts.join(' ');
+  }
 
   void filterList(String query) {
     filteredList = masterData.masterData.value.lineMaster!
@@ -68,9 +81,9 @@ class _MainScreenState extends State<MainScreen> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: themeColor1,
-          title: const Text(
-            "Talha Iqbal", // TODO Change Name Accordingly
-            style: TextStyle(color: Colors.white),
+          title: Text(
+            name,
+            style:const TextStyle(color: Colors.white),
           ),
           iconTheme: const IconThemeData(color: Colors.white),
           centerTitle: true,
