@@ -4,6 +4,7 @@ class Assets {
 
   static const String assetsFetch = 'assets/fetch.png';
   static const String assetsHideEye = 'assets/hide_eye.png';
+  static const String assetsImage = 'assets/image.jpg';
   static const String assetsLogin = 'assets/login.png';
   static const String assetsLogo = 'assets/logo.png';
   static const String assetsSpeedometer = 'assets/speedometer.png';

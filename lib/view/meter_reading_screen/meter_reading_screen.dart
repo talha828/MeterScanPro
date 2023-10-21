@@ -1,18 +1,26 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:meter_scan/backend/database/sqflite.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/backend/model/CustomerCombineModel.dart';
+import 'package:meter_scan/backend/model/CustomerMeterRecordModel.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/generated/assets.dart';
 import 'package:meter_scan/view/customer_screen/customer_screen.dart';
 import 'package:meter_scan/widget/MeterScanButton.dart';
 import 'package:meter_scan/widget/MeterScanTextField.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MeterReadingScreen extends StatefulWidget {
   final CustomerCombined customer;
@@ -23,38 +31,78 @@ class MeterReadingScreen extends StatefulWidget {
 }
 
 class _MeterReadingScreenState extends State<MeterReadingScreen> {
-  TextEditingController reading = TextEditingController();
+  final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
+
+  TextEditingController _numberController = TextEditingController();
   final ImagePicker picker = ImagePicker();
   TextEditingController date = TextEditingController(
       text: DateFormat('dd-MM-yyyy').format(DateTime.now()));
   bool imageFlag = false;
   bool loading = false;
   String newReading = "11";
-  var file;
+  File? file;
+  Uint8List? bytesImage;
+  getAutoData() async {
+    CustomerMeterRecordModel? data =
+        await SqfliteDatabase.loadRecordByMeterAndCustID(
+            widget.customer.meterNo!, widget.customer.customerId!);
+    if (data != null) {
+      bytesImage = Base64Decoder().convert(data.body);
+      // file = File.fromRawPath(bytesImage!);
+      _numberController =
+          TextEditingController(text: data.currentReading.toString());
+      date = TextEditingController(text: data.readingDate);
+      imageFlag = true;
+      setState(() {});
+    }
+  }
 
-  insertData()async{
-    if(reading.text.isNotEmpty){
-      if(date.text.isNotEmpty){
-        if(file !=null){
-          final record = {
-            'customer_name': widget.customer.customerName,
-            'customer_id': widget.customer.customerId,
-            'meter_reading': int.parse(reading.text),
-            'meter_image': file.path,
-            'date_string': date.text,
-            'line_id': int.parse(widget.customer.lineId.toString()),
-            'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-          };
-
-// Insert the record into the database
+  insertData() async {
+    if (_numberController.text.isNotEmpty){
+      if (date.text.isNotEmpty) {
+        if (file != null) {
+          print("=== get username ===");
+          SharedPreferences prefer = await SharedPreferences.getInstance();
+          String? name = prefer.getString("username");
+          print("=== get location ===");
+          var ff = await _geolocatorPlatform.requestPermission();
+          Position? position = await _geolocatorPlatform.getLastKnownPosition();
+          print("=== get timestamp ===");
+          final timestamp =
+              DateTime.now().millisecondsSinceEpoch; // Generate a timestamp
+          print("=== create record ===");
+          List<int> bytes = await file!.readAsBytes();
+          String base64 = base64Encode(bytes);
+          CustomerMeterRecordModel record = CustomerMeterRecordModel(
+              lineID: widget.customer.lineId!,
+              meterNumber: widget.customer.meterNo!,
+              readingDate: date.text.toString(),
+              currentReading: int.parse(_numberController.text),
+              custID: widget.customer.customerId!,
+              imageName: "${widget.customer.customerId!} $timestamp",
+              mimeType: 'image/jpeg',
+              imageSize: await file!.length(),
+              latitude: position!.latitude.toString(),
+              longitude: position.longitude.toString(),
+              capturedBy: name!,
+              capturedOn: timestamp.toString(),
+              syncBy: name,
+              syncOn: timestamp.toString(),
+              body: base64);
+          print("=== insert record ===");
           await SqfliteDatabase.insertCustomerRecord(record);
-        }else{
-      Get.snackbar("Image not found", "Please Take a Image");
+          Get.to(CustomerScreen(
+              lineMaster: LineMaster(
+            lineId: widget.customer.lineId,
+            lineName: widget.customer.lineName,
+          )));
+        } else {
+          Get.snackbar("Image not found", "Please Take a Image");
         }
-      }else{
-      Get.snackbar("Date not found", "Please insert a date");
+      } else {
+        Get.snackbar("Date not found", "Please insert a date");
       }
-    }else{
+    } else {
       Get.snackbar("Reading not Found", "Please insert a reading");
     }
   }
@@ -62,29 +110,28 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
   getImage() async {
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
     if (photo != null) {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      XFile? dd = await FlutterImageCompress.compressAndGetFile(
+        photo.path,
+        "${(await getApplicationDocumentsDirectory()).path}/$timestamp.jpg",
+        quality: 50,
+      );
       imageFlag = true;
-      file = File(photo!.path);
+      file = File(dd!.path);
       setState(() {});
-      newReading = await detectTextFromFile(photo!.path);
+      newReading = await detectTextFromFile(dd.path);
       if (newReading.isNotEmpty) {
-        reading = TextEditingController(text: newReading);
+        _numberController = TextEditingController(text: newReading);
       }
       setState(() {});
     }
   }
 
   Future<String> detectTextFromFile(String filePath) async {
-    // Create an InputImage object from the file.
     final InputImage inputImage = InputImage.fromFilePath(filePath);
-
-    // Create a TextRecognizer object.
     final TextRecognizer textRecognizer = TextRecognizer();
-
-    // Process the image and extract the text.
     final RecognizedText recognizedText =
         await textRecognizer.processImage(inputImage);
-
-    // Return the list of recognized text elements.
     return extractFiveOrSixDigitNumber(recognizedText.text);
   }
 
@@ -93,10 +140,16 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
     Match? match = regex.firstMatch(inputText);
 
     if (match != null) {
-      return match.group(0) ?? ''; // Return the matched string
+      return match.group(0) ?? '';
     } else {
-      return ''; // Return an empty string if no match is found
+      return '';
     }
+  }
+
+  @override
+  void initState() {
+    getAutoData();
+    super.initState();
   }
 
   @override
@@ -127,10 +180,49 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                MeterScanTextField(
-                  controller: reading,
-                  label: "Meter Reading",
-                  hintText: "123456",
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Meter Reading",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: width * 0.04,
+                      ),
+                    ),
+                    SizedBox(height: width * 0.04),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        color: fillColor,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _numberController,
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(6),
+                              ],
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                hintText: "123456",
+                                hintStyle: GoogleFonts.montserrat(
+                                  textStyle: TextStyle(
+                                    fontSize: width * 0.04,
+                                  ),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 10.0),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 MeterScanTextField(
                   controller: date,
@@ -159,10 +251,13 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
                           width: width,
                           height: width,
                           child: ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child: Image.file(
-                                file,
-                              )),
+                            borderRadius: BorderRadius.circular(50),
+                            child: file == null
+                                ? Image.memory(
+                                    bytesImage!,
+                                  )
+                                : Image.file(file!),
+                          ),
                         ),
                       )
                     : GestureDetector(
@@ -201,7 +296,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
                   children: [
                     Center(
                       child: MeterScanButton(
-                        onTap: ()=>insertData(),
+                        onTap: () => insertData(),
                         width: width,
                         label: "Save",
                       ),

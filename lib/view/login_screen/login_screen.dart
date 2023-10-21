@@ -19,31 +19,28 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  TextEditingController name = TextEditingController();
+  TextEditingController username = TextEditingController();
   TextEditingController password = TextEditingController();
   bool _isChecked = true;
   bool flag = false;
 
-  autoLogin()async{
-    setState(()=>flag=true);
+  autoLogin() async {
+    setState(() => flag = true);
     SharedPreferences prefer = await SharedPreferences.getInstance();
     String? username = prefer.getString("username");
     String? password = prefer.getString("password");
     bool? firstTime = prefer.getBool("firstTime");
-     prefer.setBool("firstTime",false);
-    if(firstTime != null){
-      setState(()=>flag=false);
-      if(username != null && password != null){
-        SqfliteDatabase.getUser(username, password, true, (value)=>setState(()=>flag=value));
-      }else{
-        // Future.delayed(const Duration(seconds: 2),(){
-        //   setState(()=>flag=false);
-        //   Get.to(const FetchDataScreen());
-        // });
+    prefer.setBool("firstTime", false);
+    if (firstTime != null) {
+      setState(() => flag = false);
+      if (username != null && password != null) {
+        SqfliteDatabase.getUser(
+            username, password, true, (value) => setState(() => flag = value));
+      } else {
       }
-    }else{
-      Future.delayed(const Duration(seconds: 2),(){
-        setState(()=>flag=false);
+    } else {
+      Future.delayed(const Duration(seconds: 2), () {
+        setState(() => flag = false);
         Get.to(const FetchDataScreen());
       });
     }
@@ -54,6 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
     autoLogin();
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
@@ -71,14 +69,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image.asset(Assets.assetsLogin,width: width * 0.5,height: width * 0.5,),
+                    Image.asset(
+                      Assets.assetsLogin,
+                      width: width * 0.5,
+                      height: width * 0.5,
+                    ),
                     const Text("Login", style: headingStyle),
-                    SizedBox(height: width * 0.04,),
-
+                    SizedBox(
+                      height: width * 0.04,
+                    ),
                     MeterScanTextField(
-                      controller: name,
-                      label: "Name",
-                      hintText: "John Wick",
+                      controller: username,
+                      label: "Username",
+                      hintText: "Nasir Ahmed",
                     ),
                     MeterScanTextField(
                         controller: password,
@@ -89,28 +92,39 @@ class _LoginScreenState extends State<LoginScreen> {
                     CustomCheckboxWithForgetPassword(
                       isForgetPassword: false,
                       onCheckboxTap: () => setState(
-                            () => _isChecked = !_isChecked,
+                        () => _isChecked = !_isChecked,
                       ),
                       isChecked: _isChecked,
                       onForgetPasswordTap: () {},
                     ),
-                    SizedBox(height: width * 0.05,),
-                    MeterScanButton(onTap: ()=>SqfliteDatabase.getUser(name.text, password.text, _isChecked,(value)=>setState(()=>flag=value)), width: width, label: "Login"),
-                    SizedBox(height: width * 0.05,),
+                    SizedBox(
+                      height: width * 0.05,
+                    ),
+                    MeterScanButton(
+                        onTap: () => SqfliteDatabase.getUser(
+                            username.text,
+                            password.text,
+                            _isChecked,
+                            (value) => setState(() => flag = value)),
+                        width: width,
+                        label: "Login"),
+                    SizedBox(
+                      height: width * 0.05,
+                    ),
                   ],
                 ),
                 flag
                     ? Container(
-                  color: Colors.white.withOpacity(0.7),
-                  child: const Center(
-                    child: LoadingIndicator(
-                      indicatorType: Indicator.ballScale,
-                      colors: [themeColor1],
-                      strokeWidth: 1,
-                      backgroundColor: Colors.transparent,
-                    ),
-                  ),
-                )
+                        color: Colors.white.withOpacity(0.7),
+                        child: const Center(
+                          child: LoadingIndicator(
+                            indicatorType: Indicator.ballScale,
+                            colors: [themeColor1],
+                            strokeWidth: 1,
+                            backgroundColor: Colors.transparent,
+                          ),
+                        ),
+                      )
                     : const SizedBox(),
               ],
             ),

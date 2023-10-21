@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
+import 'package:meter_scan/backend/model/CustomerMeterRecordModel.dart';
 import 'package:meter_scan/backend/model/UserModel.dart';
 import 'package:meter_scan/view/main_screen/main_screen.dart';
 import 'package:path/path.dart';
@@ -113,6 +115,28 @@ class SqfliteDatabase {
         status TEXT
       )
     ''');
+        await db.execute(
+          '''
+          CREATE TABLE customer_line_data(
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            LineID INTEGER,
+            MeterNumber TEXT,
+            ReadingDate TEXT,
+            CurrentReading INTEGER,
+            CustID INTEGER,
+            ImageName TEXT,
+            MimeType TEXT,
+            ImageSize INTEGER,
+            Latitude TEXT,
+            Longitude TEXT,
+            CapturedBy TEXT,
+            CapturedOn TEXT,
+            SyncBy TEXT,
+            SyncOn TEXT,
+            body TEXT
+          )
+          ''',
+        );
       },
     );
   }
@@ -173,9 +197,12 @@ class SqfliteDatabase {
     );
   }
 
-  static Future<int> insertCustomerRecord(Map<String, dynamic> record) async {
+  static Future<void> insertCustomerRecord(CustomerMeterRecordModel record) async {
     final db = await database;
-    return await db.insert("customer_records", record);
+    await db.insert(
+      'customer_line_data',
+      record.toMap(),
+    );
   }
 
   static Future<int> insertLineRecord(Map<String, dynamic> record) async {
@@ -197,7 +224,7 @@ class SqfliteDatabase {
   static Future<void> getUser(
       String? userName, String? password, bool check, var indicator) async {
     if (userName!.isNotEmpty) {
-      if (password!.isNotEmpty) {
+      if (password!.isNotEmpty || password.length > 20 ) {
         indicator(true);
         final db = await database;
         final List<Map<String, dynamic>> maps = await db.query('users',
@@ -222,11 +249,75 @@ class SqfliteDatabase {
         }
       } else {
         indicator(false);
-        Get.snackbar("Password not found", "Please enter your password");
+        Get.snackbar("Incorrect Password", "Please enter your correct password");
       }
     } else {
       indicator(false);
       Get.snackbar("userName Not Found", "Please Enter your userName");
+    }
+  }
+  static Future<bool> doesRecordExistForToday(int custId, String meterNo) async {
+    final db = await database;
+
+    // Get the current date in the same format as readingDate in the database
+    final currentDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+
+    // Query the database to check if a record with the given custId, meterNo, and today's date exists
+    final result = await db.query(
+      'customer_line_data',
+      where: 'CustID = ? AND MeterNumber = ? AND ReadingDate = ?',
+      whereArgs: [custId, meterNo, currentDate],
+    );
+
+    // If the result is not empty, a matching record exists
+    return result.isNotEmpty;
+  }
+  static Future<void> printCustomerLineData() async {
+    final db = await database;
+
+    // Query the entire "customer_line_data" table
+    final List<Map<String, dynamic>> records = await db.query('customer_line_data');
+
+    // Print each record to the console
+    for (var record in records) {
+      print(record);
+    }
+  }
+  static Future<CustomerMeterRecordModel?> loadRecordByMeterAndCustID(String meterNo, int custID) async {
+    final db = await database;
+    final currentDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+    // Query the database to check if a record with the given meterNo and custID exists
+    final List<Map<String, dynamic>> result = await db.query(
+      'customer_line_data',
+      where: 'CustID = ? AND MeterNumber = ? AND ReadingDate = ?',
+      whereArgs: [custID, meterNo, currentDate],
+    );
+
+
+    if (result.isNotEmpty) {
+      // If a matching record is found, load it into a CustomerMeterRecordModel
+      final recordData = result.first;
+      final record = CustomerMeterRecordModel(
+        lineID: recordData['LineID'],
+        meterNumber: recordData['MeterNumber'],
+        readingDate: recordData['ReadingDate'],
+        currentReading: recordData['CurrentReading'],
+        custID: recordData['CustID'],
+        imageName: recordData['ImageName'],
+        mimeType: recordData['MimeType'],
+        imageSize: recordData['ImageSize'],
+        latitude: recordData['Latitude'],
+        longitude: recordData['Longitude'],
+        capturedBy: recordData['CapturedBy'],
+        capturedOn: recordData['CapturedOn'],
+        syncBy: recordData['SyncBy'],
+        syncOn: recordData['SyncOn'],
+        body: recordData['body'], // You may need to convert this based on your data storage method
+      );
+      return record;
+    } else {
+      // If no matching record is found, return null
+      return null;
     }
   }
 }

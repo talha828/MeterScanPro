@@ -7,7 +7,9 @@ import 'package:meter_scan/backend/database/sqflite.dart';
 import 'package:meter_scan/backend/getx_model/master_controller.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/constant/constant.dart';
+import 'package:meter_scan/generated/assets.dart';
 import 'package:meter_scan/view/customer_screen/customer_screen.dart';
+import 'package:meter_scan/view/login_screen/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
@@ -32,6 +34,7 @@ class _MainScreenState extends State<MainScreen> {
     masterData.masterData.value = await SqfliteDatabase.fetchAllData();
     filteredList = masterData.masterData.value.lineMaster!;
   }
+
   String name = "loading";
   List<LineMaster> filteredList = [];
   String convertToTitleCase(String input) {
@@ -83,12 +86,73 @@ class _MainScreenState extends State<MainScreen> {
           backgroundColor: themeColor1,
           title: Text(
             name,
-            style:const TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           iconTheme: const IconThemeData(color: Colors.white),
           centerTitle: true,
+          actions: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: width * 0.04),
+              child: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Text(
+                  filteredList.length.toString(),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, color: themeColor1),
+                ),
+              ),
+            )
+          ],
         ),
-        drawer: const Drawer(),
+        drawer: Drawer(
+          child: ListView(
+            // padding: const EdgeInsets.all(0),
+            children: [
+              DrawerHeader(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                decoration: const BoxDecoration(
+                  color: themeColor1,
+                ), //BoxDecoration
+                child: UserAccountsDrawerHeader(
+                  decoration: const BoxDecoration(color: themeColor1),
+                  accountName: Text(
+                    name,
+                    style: const TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  accountEmail: const Text(
+                    "Employee of M-Scan Pro",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  currentAccountPictureSize: const Size.square(50),
+                  currentAccountPicture: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: ClipRRect(
+                        borderRadius: BorderRadius.circular(100),
+                        child: Image.asset(Assets.assetsImage)),
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: const Text('Refresh Data'),
+                onTap: () {
+                  //TODO : data refresh
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('LogOut'),
+                onTap: () async {
+                  SharedPreferences prefer =
+                      await SharedPreferences.getInstance();
+                  prefer.setString("username", "null");
+                  prefer.setString("password", "null");
+                  Get.to(const LoginScreen());
+                },
+              ),
+            ],
+          ),
+        ),
         body: Column(
           children: [
             Container(

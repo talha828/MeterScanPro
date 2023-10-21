@@ -10,6 +10,7 @@ class CustomerCombined{
   String? mvariance;
   int? varianceDescp;
   String? customerName;
+  bool? recordStatus;
   CustomerCombined({
     this.customerId,
     this.lineId,
@@ -22,9 +23,10 @@ class CustomerCombined{
     this.mvariance,
     this.varianceDescp,
     this.customerName,
+    this.recordStatus
   });
 
-  factory CustomerCombined.fromDetailsAndMaster(details,  master) {
+  factory CustomerCombined.fromDetailsAndMaster(details,  master, recordStatusValue) {
     return CustomerCombined(
       customerId: details.customerId,
       lineId: details.lineId,
@@ -37,6 +39,7 @@ class CustomerCombined{
       mvariance: details.mvariance,
       varianceDescp: details.varianceDescp,
       customerName: master.customerName,
+      recordStatus: recordStatusValue
     );
   }
 }
