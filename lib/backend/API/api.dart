@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
+import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 import 'package:meter_scan/backend/getx_model/loading_controller.dart';
 import 'dart:io';
@@ -109,8 +113,30 @@ class Api {
     }
   }
 
+
   static Future<void> _postSingleRecord(CustomerMeterRecordModel record) async {
-    final data = record.toMap();
+    List<int> imageBytes = base64Decode(record.body);
+    // File imageFile = File('path_to_save_image.jpg'); // Replace 'path_to_save_image.jpg' with the desired file path
+    // await imageFile.writeAsBytes(imageBytes);
+
+    final data = dio.FormData.fromMap({
+      'LineID': record.lineID,
+      'MeterNumber': record.meterNumber,
+      'ReadingDate': record.readingDate,
+      'CurrentReading': record.currentReading,
+      'CustID': record.custID,
+      'ImageName': record.imageName,
+      'MimeType': record.mimeType,
+      'ImageSize': record.imageSize,
+      'Latitude': record.latitude,
+      'Longitude': record.longitude,
+      'CapturedBy': record.capturedBy,
+      'CapturedOn': record.capturedOn,
+      'SyncBy': record.syncBy,
+      'SyncOn': record.syncOn,
+      'body': dio.MultipartFile.fromBytes(base64Decode(record.body), filename: 'image.jpg'), // Assuming 'body' contains the file path
+    });
+
     try {
       var results = await _dio.post('${postUrl}set_meter_reading/', data: data);
       print(results.data);
