@@ -10,6 +10,7 @@ import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/generated/assets.dart';
 import 'package:meter_scan/view/customer_screen/customer_screen.dart';
 import 'package:meter_scan/view/login_screen/login_screen.dart';
+import 'package:meter_scan/view/post_all_data_screen/post_all_data_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
@@ -133,11 +134,14 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.person),
+                leading: const Icon(Icons.refresh),
                 title: const Text('Refresh Data'),
-                onTap: () {
-                  //TODO : data refresh
-                },
+                onTap: ()async => SqfliteDatabase.deleteAllRecord(),
+              ),
+              ListTile(
+                leading: const Icon(Icons.send),
+                title: const Text('Post All Data'),
+                onTap: ()=>Get.to(const PostAllDataScreen()),
               ),
               ListTile(
                 leading: const Icon(Icons.logout),

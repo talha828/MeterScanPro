@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/backend/model/CustomerMeterRecordModel.dart';
 import 'package:meter_scan/backend/model/UserModel.dart';
+import 'package:meter_scan/view/fetch_data_screen/fetch_data_screen.dart';
 import 'package:meter_scan/view/main_screen/main_screen.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -72,43 +73,9 @@ class SqfliteDatabase {
             ''');
 
         await db.execute('''
-              CREATE TABLE save_customer_record (
-                line_id INTEGER,
-                meter_id INTEGER,
-                meter_name TEXT,
-                meter_power INTEGER,
-                FOREIGN KEY (line_id) REFERENCES line_master(line_id)
-              )
-            ''');
-
-        await db.execute('''
-          CREATE TABLE customer_records(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            customer_name TEXT,
-            customer_id TEXT,
-            meter_reading REAL,
-            meter_image TEXT,
-            date_string TEXT,
-            line_id INTEGER,
-            timestamp TEXT
-          )
-        ''');
-
-        await db.execute('''
-          CREATE TABLE line_records(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            line_name TEXT,
-            meter_reading REAL,
-            meter_image TEXT,
-            date_string TEXT,
-            line_id INTEGER,
-            timestamp TEXT
-          )
-        ''');
-
-        await db.execute('''
       CREATE TABLE users(
-        cmuser_app_id INTEGER PRIMARY KEY,
+        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cmuser_app_id INTEGER,
         full_name TEXT,
         user_name TEXT,
         password TEXT,
@@ -197,7 +164,8 @@ class SqfliteDatabase {
     );
   }
 
-  static Future<void> insertCustomerRecord(CustomerMeterRecordModel record) async {
+  static Future<void> insertCustomerRecord(
+      CustomerMeterRecordModel record) async {
     final db = await database;
     await db.insert(
       'customer_line_data',
@@ -224,7 +192,7 @@ class SqfliteDatabase {
   static Future<void> getUser(
       String? userName, String? password, bool check, var indicator) async {
     if (userName!.isNotEmpty) {
-      if (password!.isNotEmpty || password.length > 20 ) {
+      if (password!.isNotEmpty || password.length > 20) {
         indicator(true);
         final db = await database;
         final List<Map<String, dynamic>> maps = await db.query('users',
@@ -249,14 +217,17 @@ class SqfliteDatabase {
         }
       } else {
         indicator(false);
-        Get.snackbar("Incorrect Password", "Please enter your correct password");
+        Get.snackbar(
+            "Incorrect Password", "Please enter your correct password");
       }
     } else {
       indicator(false);
       Get.snackbar("userName Not Found", "Please Enter your userName");
     }
   }
-  static Future<bool> doesRecordExistForToday(int custId, String meterNo) async {
+
+  static Future<bool> doesRecordExistForToday(
+      int custId, String meterNo) async {
     final db = await database;
 
     // Get the current date in the same format as readingDate in the database
@@ -272,18 +243,20 @@ class SqfliteDatabase {
     // If the result is not empty, a matching record exists
     return result.isNotEmpty;
   }
+
   static Future<void> printCustomerLineData() async {
     final db = await database;
 
-    // Query the entire "customer_line_data" table
-    final List<Map<String, dynamic>> records = await db.query('customer_line_data');
+    final List<Map<String, dynamic>> records =
+        await db.query('customer_line_data');
 
-    // Print each record to the console
     for (var record in records) {
       print(record);
     }
   }
-  static Future<CustomerMeterRecordModel?> loadRecordByMeterAndCustID(String meterNo, int custID) async {
+
+  static Future<CustomerMeterRecordModel?> loadRecordByMeterAndCustID(
+      String meterNo, int custID) async {
     final db = await database;
     final currentDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
     // Query the database to check if a record with the given meterNo and custID exists
@@ -293,9 +266,7 @@ class SqfliteDatabase {
       whereArgs: [custID, meterNo, currentDate],
     );
 
-
     if (result.isNotEmpty) {
-      // If a matching record is found, load it into a CustomerMeterRecordModel
       final recordData = result.first;
       final record = CustomerMeterRecordModel(
         lineID: recordData['LineID'],
@@ -312,12 +283,46 @@ class SqfliteDatabase {
         capturedOn: recordData['CapturedOn'],
         syncBy: recordData['SyncBy'],
         syncOn: recordData['SyncOn'],
-        body: recordData['body'], // You may need to convert this based on your data storage method
+        body: recordData[
+            'body'], // You may need to convert this based on your data storage method
       );
       return record;
     } else {
-      // If no matching record is found, return null
       return null;
     }
+  }
+
+  static Future<List<CustomerMeterRecordModel>> getAllCustomerRecords() async {
+    final db = await database;
+    final records = await db.query('customer_line_data');
+
+    return List<CustomerMeterRecordModel>.generate(records.length, (index) {
+      return CustomerMeterRecordModel(
+        lineID: records[index]['LineID'] as int,
+        meterNumber: records[index]['MeterNumber'] as String,
+        readingDate: records[index]['ReadingDate'] as String,
+        currentReading: records[index]['CurrentReading'] as int,
+        custID: records[index]['CustID'] as int,
+        imageName: records[index]['ImageName'] as String,
+        mimeType: records[index]['MimeType'] as String,
+        imageSize: records[index]['ImageSize'] as int,
+        latitude: records[index]['Latitude'] as String,
+        longitude: records[index]['Longitude'] as String,
+        capturedBy: records[index]['CapturedBy'] as String,
+        capturedOn: records[index]['CapturedOn'] as String,
+        syncBy: records[index]['SyncBy'] as String,
+        syncOn: records[index]['SyncOn'] as String,
+        body: records[index]['body'] as String,
+      );
+    });
+  }
+
+  static Future<void> deleteAllRecord() async {
+    final db = await database;
+    await db.delete('customer_detail');
+    await db.delete('customer_master');
+    await db.delete('line_master');
+    await db.delete('line_detail');
+    Get.to(const FetchDataScreen());
   }
 }

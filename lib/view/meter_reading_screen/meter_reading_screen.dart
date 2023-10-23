@@ -58,7 +58,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
   }
 
   insertData() async {
-    if (_numberController.text.isNotEmpty){
+    if (_numberController.text.isNotEmpty) {
       if (date.text.isNotEmpty) {
         if (file != null) {
           print("=== get username ===");
@@ -86,7 +86,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
               longitude: position.longitude.toString(),
               capturedBy: name!,
               capturedOn: timestamp.toString(),
-              syncBy: name,
+              syncBy: widget.customer.customerName!,
               syncOn: timestamp.toString(),
               body: base64);
           print("=== insert record ===");

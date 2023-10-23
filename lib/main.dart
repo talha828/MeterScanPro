@@ -10,7 +10,7 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget{
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
@@ -19,17 +19,21 @@ class MyApp extends StatelessWidget{
     return GetMaterialApp(
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
-        textTheme: GoogleFonts.montserratTextTheme(Theme.of(context).textTheme,),
-        primaryTextTheme: GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
+        textTheme: GoogleFonts.montserratTextTheme(
+          Theme.of(context).textTheme,
+        ),
+        primaryTextTheme:
+            GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
         primarySwatch: createMaterialColor(themeColor1),
-        buttonTheme:const ButtonThemeData(
+        buttonTheme: const ButtonThemeData(
           buttonColor: themeColor1,
         ),
         useMaterial3: true,
       ),
-      home:const LoginScreen(),
+      home: const LoginScreen(),
     );
   }
+
   MaterialColor createMaterialColor(Color color) {
     List strengths = <double>[.05];
     final swatch = <int, Color>{};
