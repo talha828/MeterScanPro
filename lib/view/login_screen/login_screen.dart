@@ -70,14 +70,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Image.asset(
-                      Assets.assetsLogin,
-                      width: width * 0.5,
+                      Assets.assetsMeterSnapLogoSlogan,
+                      width: width * 0.4,
                       height: width * 0.5,
+                      scale: 3,
                     ),
-                    const Text("Login", style: headingStyle),
-                    SizedBox(
-                      height: width * 0.04,
-                    ),
+                    // const Text("Login", style: headingStyle),
+                    // SizedBox
+                    //   height: width * 0.04,
+                    // ),
                     MeterScanTextField(
                       controller: username,
                       label: "Username",

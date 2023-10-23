@@ -8,7 +8,7 @@ class MeterScanTextField extends StatefulWidget {
   final String hintText;
   final String label;
   String? value;
-  final bool obscureText;
+  final bool obscureText ;
   final IconData? prefixIcon;
   final Widget? prefixIconWidget;
   final dynamic suffixIcon;
@@ -18,17 +18,17 @@ class MeterScanTextField extends StatefulWidget {
 
   MeterScanTextField(
       {required this.controller,
-        required this.hintText,
-        this.value,
-        this.prefixIcon,
-        this.suffixIconData,
-        required this.label,
-        this.prefixIconWidget,
-        this.obscureText = false,
-        this.suffixIcon,
-        this.isDropdown = false,
-        this.countryCodeList,
-        super.key});
+      required this.hintText,
+      this.value,
+      this.prefixIcon,
+      this.suffixIconData,
+      required this.label,
+      this.prefixIconWidget,
+      this.obscureText= false,
+      this.suffixIcon,
+      this.isDropdown = false,
+      this.countryCodeList,
+      super.key});
 
   @override
   State<MeterScanTextField> createState() => _MeterScanTextFieldState();
@@ -43,6 +43,14 @@ class _MeterScanTextFieldState extends State<MeterScanTextField> {
     });
   }
 
+
+
+  @override
+  void initState() {
+    obscureText = widget.obscureText;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
@@ -52,9 +60,9 @@ class _MeterScanTextFieldState extends State<MeterScanTextField> {
         Text(
           widget.label,
           style: TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: width * 0.04,
-              ),
+            fontWeight: FontWeight.w500,
+            fontSize: width * 0.04,
+          ),
         ),
         SizedBox(height: width * 0.04),
         Container(
@@ -69,36 +77,36 @@ class _MeterScanTextFieldState extends State<MeterScanTextField> {
                 padding: const EdgeInsets.only(left: 8),
                 child: widget.isDropdown
                     ? Row(
-                  children: [
-                    DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isDense: true,
-                        value: selectedItem,
-                        onChanged: (newValue) {
-                          widget.value = newValue;
-                          setState(() => selectedItem = newValue!);
-                        },
-                        items: widget.countryCodeList!
-                            .map((String countryCode) {
-                          return DropdownMenuItem<String>(
-                            value: countryCode,
-                            child: Text(countryCode),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 20,
-                      child: VerticalDivider(
-                        color: Colors.grey.shade400,
-                      ),
-                    ),
-                  ],
-                )
+                        children: [
+                          DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              isDense: true,
+                              value: selectedItem,
+                              onChanged: (newValue) {
+                                widget.value = newValue;
+                                setState(() => selectedItem = newValue!);
+                              },
+                              items: widget.countryCodeList!
+                                  .map((String countryCode) {
+                                return DropdownMenuItem<String>(
+                                  value: countryCode,
+                                  child: Text(countryCode),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 20,
+                            child: VerticalDivider(
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                        ],
+                      )
                     : Icon(
-                  widget.prefixIcon,
-                  color: themeColor1.withOpacity(0.2),
-                ),
+                        widget.prefixIcon,
+                        color: themeColor1.withOpacity(0.2),
+                      ),
               ),
               // Text Input Field
               Expanded(
@@ -114,7 +122,7 @@ class _MeterScanTextFieldState extends State<MeterScanTextField> {
                     ),
                     border: InputBorder.none,
                     contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 10.0),
+                        const EdgeInsets.symmetric(horizontal: 10.0),
                   ),
                 ),
               ),
@@ -124,27 +132,26 @@ class _MeterScanTextFieldState extends State<MeterScanTextField> {
                   padding: const EdgeInsets.all(8.0),
                   child: widget.suffixIcon is IconData
                       ? GestureDetector(
-                    onTap: widget.obscureText
-                        ? _togglePasswordVisibility
-                        : () {},
-                    child: obscureText
-                        ? Icon(
-                      widget.suffixIcon,
-                      size: 24.0, // Adjust the size as needed
-                    )
-                        : Image.asset(
-                      Assets.assetsHideEye,
-                      width: 24.0, // Adjust the size as needed
-                      height: 24.0, // Adjust the size as needed
-                    ),
-                  )
+                          onTap: widget.obscureText
+                              ? _togglePasswordVisibility
+                              : () {},
+                          child: obscureText
+                              ? Icon(
+                                  widget.suffixIcon,
+                                  size: 24.0,
+                                )
+                              : Image.asset(
+                                  Assets.assetsHideEye,
+                                  width: 24.0,
+                                  height: 24.0,
+                                ),
+                        )
                       : Image.asset(
-                    widget.suffixIcon,
-                    width: 24.0, // Adjust the size as needed
-                    height: 24.0, // Adjust the size as needed
-                  ),
+                          widget.suffixIcon,
+                          width: 24.0,
+                          height: 24.0,
+                        ),
                 ),
-              // If suffixIcon is null, use an empty SizedBox
             ],
           ),
         ),

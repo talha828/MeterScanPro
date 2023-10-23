@@ -7,6 +7,7 @@ class Assets {
   static const String assetsImage = 'assets/image.jpg';
   static const String assetsLogin = 'assets/login.png';
   static const String assetsLogo = 'assets/logo.png';
+  static const String assetsMeterSnapLogoSlogan = 'assets/MeterSnap-logo-Slogan.png';
   static const String assetsSpeedometer = 'assets/speedometer.png';
 
 }
