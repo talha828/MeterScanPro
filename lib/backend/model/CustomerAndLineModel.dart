@@ -132,12 +132,14 @@ class CustomerDetail {
 class LineMaster {
   int? lineId;
   String? lineName;
+  bool?  isRecord;
 
-  LineMaster({this.lineId, this.lineName});
+  LineMaster({this.lineId, this.lineName,this.isRecord});
 
   LineMaster.fromJson(Map<String, dynamic> json) {
     lineId = json['line_id'];
     lineName = json['line_name'];
+    isRecord = false;
   }
 
   Map<String, dynamic> toJson() {

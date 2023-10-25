@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/backend/model/CustomerMeterRecordModel.dart';
+import 'package:meter_scan/backend/model/LineMeterRecordModel.dart';
 import 'package:meter_scan/backend/model/UserModel.dart';
 import 'package:meter_scan/view/fetch_data_screen/fetch_data_screen.dart';
 import 'package:meter_scan/view/main_screen/main_screen.dart';
@@ -104,6 +105,28 @@ class SqfliteDatabase {
           )
           ''',
         );
+
+        await db.execute(
+          '''
+          CREATE TABLE line_data(
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            LineID INTEGER,
+            MeterNumber TEXT,
+            ReadingDate TEXT,
+            CurrentReading INTEGER,
+            ImageName TEXT,
+            MimeType TEXT,
+            ImageSize INTEGER,
+            Latitude TEXT,
+            Longitude TEXT,
+            CapturedBy TEXT,
+            CapturedOn TEXT,
+            SyncBy TEXT,
+            SyncOn TEXT,
+            body TEXT
+          )
+          ''',
+        );
       },
     );
   }
@@ -173,11 +196,6 @@ class SqfliteDatabase {
     );
   }
 
-  static Future<int> insertLineRecord(Map<String, dynamic> record) async {
-    final db = await database;
-    return await db.insert("line_records", record);
-  }
-
   static Future<void> insertAllUsers(List<UserModel> users) async {
     final db = await database;
     final batch = db.batch();
@@ -243,6 +261,23 @@ class SqfliteDatabase {
     // If the result is not empty, a matching record exists
     return result.isNotEmpty;
   }
+  static Future<bool> doesLineRecordExistForToday(
+      int lineId,) async {
+    final db = await database;
+
+    // Get the current date in the same format as readingDate in the database
+    final currentDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+
+    // Query the database to check if a record with the given custId, meterNo, and today's date exists
+    final result = await db.query(
+      'line_data',
+      where: 'LineID = ? AND ReadingDate = ?',
+      whereArgs: [lineId, currentDate],
+    );
+
+    // If the result is not empty, a matching record exists
+    return result.isNotEmpty;
+  }
 
   static Future<void> printCustomerLineData() async {
     final db = await database;
@@ -283,8 +318,41 @@ class SqfliteDatabase {
         capturedOn: recordData['CapturedOn'],
         syncBy: recordData['SyncBy'],
         syncOn: recordData['SyncOn'],
-        body: recordData[
-            'body'], // You may need to convert this based on your data storage method
+        body: recordData['body'],
+      );
+      return record;
+    } else {
+      return null;
+    }
+  }
+
+  static Future<LineMeterRecordModel?> loadLineRecordByMeterAndCustID(
+      int lineId) async {
+    final db = await database;
+    final currentDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+    final List<Map<String, dynamic>> result = await db.query(
+      'line_data',
+      where: 'LineID = ? AND ReadingDate = ?',
+      whereArgs: [lineId, currentDate],
+    );
+
+    if (result.isNotEmpty) {
+      final recordData = result.first;
+      final record = LineMeterRecordModel(
+        lineID: recordData['LineID'],
+        meterNumber: recordData['MeterNumber'],
+        readingDate: recordData['ReadingDate'],
+        currentReading: recordData['CurrentReading'],
+        imageName: recordData['ImageName'],
+        mimeType: recordData['MimeType'],
+        imageSize: recordData['ImageSize'],
+        latitude: recordData['Latitude'],
+        longitude: recordData['Longitude'],
+        capturedBy: recordData['CapturedBy'],
+        capturedOn: recordData['CapturedOn'],
+        syncBy: recordData['SyncBy'],
+        syncOn: recordData['SyncOn'],
+        body: recordData['body'],
       );
       return record;
     } else {
@@ -296,25 +364,54 @@ class SqfliteDatabase {
     final db = await database;
     final records = await db.query('customer_line_data');
 
-    return List<CustomerMeterRecordModel>.generate(records.length, (index) {
-      return CustomerMeterRecordModel(
-        lineID: records[index]['LineID'] as int,
-        meterNumber: records[index]['MeterNumber'] as String,
-        readingDate: records[index]['ReadingDate'] as String,
-        currentReading: records[index]['CurrentReading'] as int,
-        custID: records[index]['CustID'] as int,
-        imageName: records[index]['ImageName'] as String,
-        mimeType: records[index]['MimeType'] as String,
-        imageSize: records[index]['ImageSize'] as int,
-        latitude: records[index]['Latitude'] as String,
-        longitude: records[index]['Longitude'] as String,
-        capturedBy: records[index]['CapturedBy'] as String,
-        capturedOn: records[index]['CapturedOn'] as String,
-        syncBy: records[index]['SyncBy'] as String,
-        syncOn: records[index]['SyncOn'] as String,
-        body: records[index]['body'] as String,
-      );
-    });
+    return List<CustomerMeterRecordModel>.generate(
+      records.length,
+      (index) {
+        return CustomerMeterRecordModel(
+          lineID: records[index]['LineID'] as int,
+          meterNumber: records[index]['MeterNumber'] as String,
+          readingDate: records[index]['ReadingDate'] as String,
+          currentReading: records[index]['CurrentReading'] as int,
+          custID: records[index]['CustID'] as int,
+          imageName: records[index]['ImageName'] as String,
+          mimeType: records[index]['MimeType'] as String,
+          imageSize: records[index]['ImageSize'] as int,
+          latitude: records[index]['Latitude'] as String,
+          longitude: records[index]['Longitude'] as String,
+          capturedBy: records[index]['CapturedBy'] as String,
+          capturedOn: records[index]['CapturedOn'] as String,
+          syncBy: records[index]['SyncBy'] as String,
+          syncOn: records[index]['SyncOn'] as String,
+          body: records[index]['body'] as String,
+        );
+      },
+    );
+  }
+  static Future<List<LineMeterRecordModel>> getAllLineRecords() async {
+    final db = await database;
+    final records = await db.query('line_data');
+
+    return List<LineMeterRecordModel>.generate(
+      records.length,
+          (index) {
+        return LineMeterRecordModel(
+          lineID: records[index]['LineID'] as int,
+          meterNumber: records[index]['MeterNumber'] as String,
+          readingDate: records[index]['ReadingDate'] as String,
+          currentReading: records[index]['CurrentReading'] as int,
+          imageName: records[index]['ImageName'] as String,
+          mimeType: records[index]['MimeType'] as String,
+          imageSize: records[index]['ImageSize'] as int,
+          latitude: records[index]['Latitude'] as String,
+          longitude: records[index]['Longitude'] as String,
+          capturedBy: records[index]['CapturedBy'] as String,
+          capturedOn: records[index]['CapturedOn'] as String,
+          syncBy: records[index]['SyncBy'] as String,
+          syncOn: records[index]['SyncOn'] as String,
+          body: records[index]['body'] as String,
+        );
+      },
+    );
   }
 
   static Future<void> deleteAllRecord() async {
@@ -324,5 +421,13 @@ class SqfliteDatabase {
     await db.delete('line_master');
     await db.delete('line_detail');
     Get.to(const FetchDataScreen());
+  }
+
+  static Future<void> insertLineRecord(LineMeterRecordModel record) async {
+    final db = await database;
+    await db.insert(
+      'line_data',
+      record.toMap(),
+    );
   }
 }

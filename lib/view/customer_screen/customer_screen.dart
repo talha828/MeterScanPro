@@ -89,7 +89,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
             floatingActionButton: FloatingActionButton.extended(
               backgroundColor: themeColor1,
               onPressed: () => Get.to(
-                LineMeterReadingScreen(line: widget.lineMaster),
+                LineMeterReadingScreen(line:masterData.masterData.value.lineDetail!.firstWhere((element) => element.lineId == widget.lineMaster.lineId)),
               ),
               label: const Text(
                 "Line Meter Reading",

@@ -6,14 +6,14 @@ import 'package:meter_scan/backend/model/CustomerMeterRecordModel.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/widget/MeterScanButton.dart';
 
-class PostAllDataScreen extends StatefulWidget {
-  const PostAllDataScreen({super.key});
+class PostCustomerDataScreen extends StatefulWidget {
+  const PostCustomerDataScreen({super.key});
 
   @override
-  State<PostAllDataScreen> createState() => _PostAllDataScreenState();
+  State<PostCustomerDataScreen> createState() => _PostCustomerDataScreenState();
 }
 
-class _PostAllDataScreenState extends State<PostAllDataScreen> {
+class _PostCustomerDataScreenState extends State<PostCustomerDataScreen> {
   List<CustomerMeterRecordModel>? list = [];
 
   getData() async {

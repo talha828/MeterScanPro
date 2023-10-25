@@ -10,7 +10,8 @@ import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/generated/assets.dart';
 import 'package:meter_scan/view/customer_screen/customer_screen.dart';
 import 'package:meter_scan/view/login_screen/login_screen.dart';
-import 'package:meter_scan/view/post_all_data_screen/post_all_data_screen.dart';
+import 'package:meter_scan/view/post_customer_data_screen/post_all_data_screen.dart';
+import 'package:meter_scan/view/post_line_data_screen/post_line_data_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
@@ -25,6 +26,10 @@ class _MainScreenState extends State<MainScreen> {
   String currentTime = '';
   String currentDate = '';
   final masterData = Get.put(MasterController());
+  String name = "loading";
+  List<LineMaster> filteredList = [];
+  List<LineMaster> resetList = [];
+
 
   loadData() async {
     SharedPreferences prefer = await SharedPreferences.getInstance();
@@ -33,11 +38,13 @@ class _MainScreenState extends State<MainScreen> {
       name = convertToTitleCase(username!);
     });
     masterData.masterData.value = await SqfliteDatabase.fetchAllData();
-    filteredList = masterData.masterData.value.lineMaster!;
+    for(var i in masterData.masterData.value.lineMaster!){
+      resetList.add(LineMaster(lineId:i.lineId ,lineName:i.lineName ,isRecord:await SqfliteDatabase.doesLineRecordExistForToday(i.lineId!) ,));
+    }
+    filteredList = resetList;
   }
 
-  String name = "loading";
-  List<LineMaster> filteredList = [];
+
   String convertToTitleCase(String input) {
     List<String> parts = input.split('.');
     for (int i = 0; i < parts.length; i++) {
@@ -47,7 +54,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void filterList(String query) {
-    filteredList = masterData.masterData.value.lineMaster!
+    filteredList = resetList
         .where((line) =>
             line.lineName!.toLowerCase().contains(query.toLowerCase()) ||
             line.lineId.toString().contains(query))
@@ -140,8 +147,13 @@ class _MainScreenState extends State<MainScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.send),
-                title: const Text('Post All Data'),
-                onTap: ()=>Get.to(const PostAllDataScreen()),
+                title: const Text('Post Line Data'),
+                onTap: ()=>Get.to(const PostLineDataScreen()),
+              ),
+              ListTile(
+                leading: const Icon(Icons.send),
+                title: const Text('Post Customer Data'),
+                onTap: ()=>Get.to(const PostCustomerDataScreen()),
               ),
               ListTile(
                 leading: const Icon(Icons.logout),
@@ -216,6 +228,9 @@ class _MainScreenState extends State<MainScreen> {
                       shrinkWrap: true,
                       itemBuilder: (context, index) {
                         return ListTile(
+                          tileColor: filteredList[index].isRecord!
+                              ? themeColor1.withOpacity(0.2)
+                              : Colors.white,
                           onTap: () => Get.to(
                               CustomerScreen(lineMaster: filteredList[index])),
                           title: Text(filteredList[index].lineName!),

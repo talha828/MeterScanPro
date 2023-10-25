@@ -66,7 +66,15 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
           String? name = prefer.getString("username");
           print("=== get location ===");
           var ff = await _geolocatorPlatform.requestPermission();
+          bool df = await _geolocatorPlatform.isLocationServiceEnabled();
+          if(df == false){
+            bool df = await _geolocatorPlatform.openLocationSettings();
+          }
           Position? position = await _geolocatorPlatform.getLastKnownPosition();
+
+          if(position == null){
+            Get.snackbar("Location Error", "Please Enable your location and restart your application");
+          }
           print("=== get timestamp ===");
           final timestamp =
               DateTime.now().millisecondsSinceEpoch; // Generate a timestamp
@@ -82,8 +90,8 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
               imageName: "${widget.customer.customerId!} $timestamp",
               mimeType: 'image/jpeg',
               imageSize: await file!.length(),
-              latitude: position!.latitude.toString(),
-              longitude: position.longitude.toString(),
+              latitude:  position== null?"123123":position!.latitude.toString(),
+              longitude: position== null?"123123":position.longitude.toString(),
               capturedBy: name!,
               capturedOn: timestamp.toString(),
               syncBy: widget.customer.customerName!,
