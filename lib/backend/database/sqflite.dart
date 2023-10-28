@@ -76,7 +76,7 @@ class SqfliteDatabase {
         await db.execute('''
       CREATE TABLE users(
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
-        cmuser_app_id INTEGER,
+        is_locked TEXT,
         full_name TEXT,
         user_name TEXT,
         password TEXT,
@@ -209,7 +209,9 @@ class SqfliteDatabase {
 
   static Future<void> getUser(
       String? userName, String? password, bool check, var indicator) async {
-    if (userName!.isNotEmpty) {
+    final RegExp usernameRegExp = RegExp(r"^[A-Za-z.]+$");
+
+    if (userName!.isNotEmpty || usernameRegExp.hasMatch(userName)) {
       if (password!.isNotEmpty || password.length > 20) {
         indicator(true);
         final db = await database;
@@ -218,15 +220,20 @@ class SqfliteDatabase {
             whereArgs: [userName, password]);
 
         if (maps.isNotEmpty) {
-          if (check) {
-            SharedPreferences prefer = await SharedPreferences.getInstance();
-            prefer.setString("username", userName);
-            prefer.setString("password", password);
-            indicator(false);
-            Get.to(const MainScreen());
-          } else {
-            indicator(false);
-            Get.to(const MainScreen());
+          if(maps[0]["is_locked"] == "Y"){
+            Get.snackbar(
+                "Your Account Has Been Locked", "To unlock your account, please get in touch with your administrator.");
+          }else{
+            if (check) {
+              SharedPreferences prefer = await SharedPreferences.getInstance();
+              prefer.setString("username", userName);
+              prefer.setString("password", password);
+              indicator(false);
+              Get.to(const FetchDataScreen());
+            } else {
+              indicator(false);
+              Get.to(const MainScreen());
+            }
           }
         } else {
           indicator(false);
@@ -240,10 +247,25 @@ class SqfliteDatabase {
       }
     } else {
       indicator(false);
-      Get.snackbar("userName Not Found", "Please Enter your userName");
+      Get.snackbar("Incorrect userName", "Please Enter your correct userName");
     }
   }
+  static Future<bool> validUser()async{
+    final db = await database;
+    SharedPreferences prefer = await SharedPreferences.getInstance();
+    String? username = prefer.getString("username");
+    String? password = prefer.getString("password");
+    final List<Map<String, dynamic>> maps = await db.query('users',
+        where: 'user_name = ? AND password = ?',
+        whereArgs: [username, password]);
 
+    if (maps.isNotEmpty) {
+      if(maps[0]["is_locked"] == "Y"){
+        return false;
+      }
+    }
+    return true;
+  }
   static Future<bool> doesRecordExistForToday(
       int custId, String meterNo) async {
     final db = await database;
@@ -255,11 +277,20 @@ class SqfliteDatabase {
     final result = await db.query(
       'customer_line_data',
       where: 'CustID = ? AND MeterNumber = ? AND ReadingDate = ?',
-      whereArgs: [custId, meterNo, currentDate],
+      whereArgs: [custId, meterNo, formatCustomDate(currentDate)],
     );
 
     // If the result is not empty, a matching record exists
     return result.isNotEmpty;
+  }
+  static String formatCustomDate(String originalDate) {
+    // Parse the original date into a DateTime object
+    DateTime dateTime = DateFormat('dd-MM-yyyy').parse(originalDate);
+
+    // Format the date in the desired format
+    String formattedDate = DateFormat('dd-MMM-yyyy').format(dateTime).toUpperCase();
+
+    return formattedDate;
   }
   static Future<bool> doesLineRecordExistForToday(
       int lineId,) async {
@@ -272,7 +303,7 @@ class SqfliteDatabase {
     final result = await db.query(
       'line_data',
       where: 'LineID = ? AND ReadingDate = ?',
-      whereArgs: [lineId, currentDate],
+      whereArgs: [lineId, formatCustomDate(currentDate)],
     );
 
     // If the result is not empty, a matching record exists
@@ -429,5 +460,29 @@ class SqfliteDatabase {
       'line_data',
       record.toMap(),
     );
+  }
+  static Future<void> deleteRecordFromDatabase(int customerID, String meterNumber) async {
+    try {
+      final db = await database;
+      // Delete the record based on the customerID and meterNumber
+      await db.delete("customer_line_data", where: 'CustID = ? AND MeterNumber = ?', whereArgs: [customerID, meterNumber]);
+
+      // Close the database
+    } catch (e) {
+      print('Error deleting record from the database: $e');
+    }
+  }
+
+  static Future<void> deleteLineRecordFromDatabase(int lineID) async {
+    try {
+
+      final db = await database;
+      // Delete the record based on the lineID
+      await db.delete("line_data", where: 'LineID = ?', whereArgs: [lineID]);
+
+      // Close the database
+    } catch (e) {
+      print('Error deleting record from the database: $e');
+    }
   }
 }

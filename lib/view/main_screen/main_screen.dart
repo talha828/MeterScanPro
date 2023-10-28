@@ -39,7 +39,13 @@ class _MainScreenState extends State<MainScreen> {
     });
     masterData.masterData.value = await SqfliteDatabase.fetchAllData();
     for(var i in masterData.masterData.value.lineMaster!){
-      resetList.add(LineMaster(lineId:i.lineId ,lineName:i.lineName ,isRecord:await SqfliteDatabase.doesLineRecordExistForToday(i.lineId!) ,));
+      int count = 0;
+      for(var j in masterData.masterData.value.customerDetail!){
+        if(j.lineId == i.lineId){
+          count = count+1;
+        }
+      }
+      resetList.add(LineMaster(lineId:i.lineId ,lineName:i.lineName ,isRecord:await SqfliteDatabase.doesLineRecordExistForToday(i.lineId!) ,customerCount:count));
     }
     filteredList = resetList;
   }
@@ -234,6 +240,7 @@ class _MainScreenState extends State<MainScreen> {
                           onTap: () => Get.to(
                               CustomerScreen(lineMaster: filteredList[index])),
                           title: Text(filteredList[index].lineName!),
+                          subtitle:Text("Customer No: ${filteredList[index].customerCount!.toString()}"),
                           leading: Text(
                             filteredList[index].lineId!.toString(),
                             style: const TextStyle(fontSize: 24),

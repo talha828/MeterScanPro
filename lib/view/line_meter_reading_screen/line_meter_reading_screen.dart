@@ -13,12 +13,9 @@ import 'package:intl/intl.dart';
 import 'package:meter_scan/backend/database/sqflite.dart';
 import 'package:meter_scan/backend/getx_model/master_controller.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
-import 'package:meter_scan/backend/model/CustomerCombineModel.dart';
-import 'package:meter_scan/backend/model/CustomerMeterRecordModel.dart';
 import 'package:meter_scan/backend/model/LineMeterRecordModel.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/generated/assets.dart';
-import 'package:meter_scan/view/customer_screen/customer_screen.dart';
 import 'package:meter_scan/view/main_screen/main_screen.dart';
 import 'package:meter_scan/widget/MeterScanButton.dart';
 import 'package:meter_scan/widget/MeterScanTextField.dart';
@@ -45,6 +42,15 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
   String newReading = "11";
   File? file;
   Uint8List? bytesImage;
+  String formatCustomDate(String originalDate) {
+    // Parse the original date into a DateTime object
+    DateTime dateTime = DateFormat('dd-MM-yyyy').parse(originalDate);
+
+    // Format the date in the desired format
+    String formattedDate = DateFormat('dd-MMM-yyyy').format(dateTime).toUpperCase();
+
+    return formattedDate;
+  }
   getAutoData() async {
     LineMeterRecordModel? data =
         await SqfliteDatabase.loadLineRecordByMeterAndCustID(
@@ -87,7 +93,7 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
           LineMeterRecordModel record = LineMeterRecordModel(
               lineID: widget.line.lineId!,
               meterNumber: widget.line.meterId!.toString(),
-              readingDate: date.text.toString(),
+              readingDate: formatCustomDate(date.text.toString()),
               currentReading: int.parse(_numberController.text),
               imageName: "${widget.line.lineId!} $timestamp",
               mimeType: 'image/jpeg',
@@ -121,7 +127,7 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       XFile? dd = await FlutterImageCompress.compressAndGetFile(
         photo.path,
-        "${(await getApplicationDocumentsDirectory()).path}/$timestamp.jpg",
+        "${(await getApplicationDocumentsDirectory()).path}/$timestamp.jpeg",
         quality: 50,
       );
       imageFlag = true;
@@ -234,10 +240,13 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
                     ),
                   ],
                 ),
-                MeterScanTextField(
-                  controller: date,
-                  label: "Reading Date",
-                  hintText: date.text,
+                IgnorePointer(
+                  ignoring: true,
+                  child: MeterScanTextField(
+                    controller: date,
+                    label: "Reading Date",
+                    hintText: date.text,
+                  ),
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: width * 0.04),

@@ -18,11 +18,12 @@ class _FetchDataScreenState extends State<FetchDataScreen> {
   bool flag = false;
   final LoadingController loadingController = Get.put(LoadingController());
 
-  setLoading(bool value){
+  setLoading(bool value) {
     setState(() {
       flag = value;
     });
   }
+
   @override
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
@@ -51,14 +52,16 @@ class _FetchDataScreenState extends State<FetchDataScreen> {
                   const Padding(
                     padding: EdgeInsets.all(10),
                     child: Text(
-                      "This appears to be your first login attempt. To continue, it is necessary for you to establish a stable internet connection. This connection will enable you to access and utilize the full range of features and services available",
+                      "Begin by loading all your data. It's essential to establish a stable internet connection for this task, which will then allow you to access and make use of the complete array of features and services at your disposal",
                       textAlign: TextAlign.center,
                     ),
                   ),
                   MeterScanButton(
                       onTap: () {
                         setLoading(true);
-                        Api.collectMasterDetails().catchError((onError){setLoading(false);});
+                        Api.collectMasterDetails().catchError((onError) {
+                          setLoading(false);
+                        });
                       },
                       width: width,
                       label: "Fetch All Data"),

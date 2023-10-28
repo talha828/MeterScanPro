@@ -7,30 +7,53 @@ import 'dart:io';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/backend/database/sqflite.dart';
 import 'package:meter_scan/backend/model/CustomerMeterRecordModel.dart';
+import 'package:meter_scan/backend/model/LineMeterRecordModel.dart';
 import 'package:meter_scan/backend/model/UserModel.dart';
 import 'package:meter_scan/view/login_screen/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-const baseUrl =
-    "https://gdbdd1958df4205-atpnew.adb.me-abudhabi-1.oraclecloudapps.com/ords/ws/data/";
-const masterDetails = "${baseUrl}meter_reading_data/";
+import '../../view/main_screen/main_screen.dart';
 
-const postUrl = "http://erp.convexconsulting.com.pk:9999/ords/ws/data/";
+const baseUrl = "http://erp.convexconsulting.com.pk:9999/ords/ws/data";
+const masterDetails = "$baseUrl/meter_reading_data/?P_USERNAME=";
+const login = "$baseUrl/login/";
 
 class Api {
   Api._();
   static final Dio _dio = Dio();
 
+  static Future<void> collectUserDetails() async {
+    final LoadingController loadingController = Get.find<LoadingController>();
+    print("===== Call user Data Api =======");
+    try {
+      final response = await _dio.get(login);
+      if (response.statusCode == 200) {
+        print("===== SetUp Model =======");
+        final List<dynamic> data = response.data['items'];
+        List<UserModel> users =
+            data.map((json) => UserModel.fromJson(json)).toList();
+        SqfliteDatabase.insertAllUsers(users);
+
+        loadingController.toggleFlag(false);
+      } else {
+        throw Exception('Failed to load user data');
+      }
+    } catch (e) {
+      throw Exception('Failed to load user data: $e');
+    }
+  }
+
   static Future<void> collectMasterDetails() async {
     final LoadingController loadingController = Get.find<LoadingController>();
     try {
       loadingController.toggleFlag(true);
+      SharedPreferences prefer = await SharedPreferences.getInstance();
+      String? username = prefer.getString("username");
       final result = await InternetAddress.lookup('google.com');
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
         try {
           print("===== call Api =======");
-          final response = await _dio.get(
-            'https://gdbdd1958df4205-atpnew.adb.me-abudhabi-1.oraclecloudapps.com/ords/ws/data/meter_reading_data/',
-          );
+          final response = await _dio.get("$masterDetails$username");
           print("====== response status ======");
           print(response.statusCode.toString());
           if (response.statusCode == 200) {
@@ -54,24 +77,7 @@ class Api {
                 SqfliteDatabase.insertLineDetail(lineDetail);
               }
               print("===== data storing completed =======");
-              print("===== Call user Data Api =======");
-              try {
-                final response = await _dio.get(
-                    'http://erp.convexconsulting.com.pk:9999/ords/ws/data/login/');
-                if (response.statusCode == 200) {
-                  print("===== SetUp Model =======");
-                  final List<dynamic> data = response.data['items'];
-                  List<UserModel> users =
-                      data.map((json) => UserModel.fromJson(json)).toList();
-                  SqfliteDatabase.insertAllUsers(users);
-                  Get.to(const LoginScreen());
-                  loadingController.toggleFlag(false);
-                } else {
-                  throw Exception('Failed to load user data');
-                }
-              } catch (e) {
-                throw Exception('Failed to load user data: $e');
-              }
+              Get.to(const MainScreen());
             }
           } else {
             loadingController.toggleFlag(false);
@@ -99,25 +105,36 @@ class Api {
     }
   }
 
-  static Future<void> postMeterReadings(
-      List<CustomerMeterRecordModel> records) async {
+  static Future<void> postLineMeterReadings(
+      List<LineMeterRecordModel> records) async {
     for (var record in records) {
-      try {
-        await _postSingleRecord(record);
-      } catch (e) {
-        print('Error posting record: $e');
-        // You can handle the error here, e.g., retry, log, or store the failed records for later.
+      bool success = await _postSingleLineRecord(record);
+
+      if (!success) {
+        // Stop posting if there is an API error
+        print('API Error. Stopping further posts.');
+        break;
       }
     }
   }
 
+  static Future<void> postMeterReadings(
+      List<CustomerMeterRecordModel> records) async {
+    for (var record in records) {
+      bool success = await _postSingleRecord(record);
 
-  static Future<void> _postSingleRecord(CustomerMeterRecordModel record) async {
-    List<int> imageBytes = base64Decode(record.body);
-    // File imageFile = File('path_to_save_image.jpg'); // Replace 'path_to_save_image.jpg' with the desired file path
-    // await imageFile.writeAsBytes(imageBytes);
+      if (!success) {
+        // Stop posting if there is an API error
+        print('API Error. Stopping further posts.');
+        break;
+      }
+    }
+  }
+  static Future<bool> _postSingleRecord(CustomerMeterRecordModel record) async {
+    final data = dio.FormData();
 
-    final data = dio.FormData.fromMap({
+    // Create options with custom headers
+    final options = dio.Options(headers: {
       'LineID': record.lineID,
       'MeterNumber': record.meterNumber,
       'ReadingDate': record.readingDate,
@@ -125,23 +142,87 @@ class Api {
       'CustID': record.custID,
       'ImageName': record.imageName,
       'MimeType': record.mimeType,
-      'ImageSize': record.imageSize,
+      'ImageSize': getImageSizeInKB(record.body),
       'Latitude': record.latitude,
       'Longitude': record.longitude,
       'CapturedBy': record.capturedBy,
-      'CapturedOn': record.capturedOn,
+      'CapturedOn': record.readingDate,
       'SyncBy': record.syncBy,
-      'SyncOn': record.syncOn,
-      'body': dio.MultipartFile.fromBytes(base64Decode(record.body), filename: 'image.jpg'), // Assuming 'body' contains the file path
     });
+    data.files.add(
+      MapEntry(
+        'body',
+        dio.MultipartFile.fromBytes(base64Decode(record.body),
+            filename: '${record.imageName}.jpg'),
+      ),
+    );
 
     try {
-      var results = await _dio.post('${postUrl}set_meter_reading/', data: data);
+      var results = await _dio.post('$baseUrl/set_meter_reading/',
+          data: data, options: options);
       print(results.data);
       print('Record posted successfully: ${record.lineID}');
+
+      // Remove the record from the database on success
+      await SqfliteDatabase.deleteRecordFromDatabase(record.custID,record.meterNumber);
+
+      return true; // Success
     } catch (e) {
       Get.snackbar("Server Error", e.toString());
-      throw e;
+      return false; // Failure
     }
+  }
+  static Future<bool> _postSingleLineRecord(LineMeterRecordModel record) async {
+    final data = dio.FormData();
+
+    // Create options with custom headers
+    final options = dio.Options(headers: {
+      'LineID': record.lineID,
+      'MeterNumber': record.meterNumber,
+      'ReadingDate': record.readingDate,
+      'CurrentReading': record.currentReading,
+      'ImageName': record.imageName,
+      'MimeType': record.mimeType,
+      'ImageSize': getImageSizeInKB(record.body),
+      'Latitude': record.latitude,
+      'Longitude': record.longitude,
+      'CapturedBy': record.capturedBy,
+      'CapturedOn': record.readingDate,
+      'SyncBy': record.syncBy,
+    });
+    data.files.add(
+      MapEntry(
+        'body',
+        dio.MultipartFile.fromBytes(base64Decode(record.body),
+            filename: '${record.imageName}.jpg'),
+      ),
+    );
+
+    try {
+      var results = await _dio.post('$baseUrl/set_line_meter_reading/',
+          data: data, options: options);
+      print(results.data);
+      print('Record posted successfully: ${record.lineID}');
+
+      // Remove the record from the database on success
+      await SqfliteDatabase.deleteLineRecordFromDatabase(record.lineID);
+
+      return true; // Success
+    } catch (e) {
+      Get.snackbar("Server Error", e.toString());
+      return false; // Failure
+    }
+  }
+  static int getImageSizeInKB(String base64Image) {
+    // Decode the base64 string into bytes
+    List<int> bytes = base64Decode(base64Image);
+
+    // Calculate the size of the byte array
+    int imageSizeInBytes = bytes.length;
+
+    // Convert bytes to kilobytes
+    double imageSizeInKB = imageSizeInBytes / 1024.0;
+
+    return imageSizeInKB.round();
   }
 }

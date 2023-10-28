@@ -5,11 +5,13 @@ import 'package:meter_scan/backend/database/sqflite.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/generated/assets.dart';
 import 'package:meter_scan/view/fetch_data_screen/fetch_data_screen.dart';
-import 'package:meter_scan/view/main_screen/main_screen.dart';
 import 'package:meter_scan/widget/CustomCheckboxWithForgetPassword.dart';
 import 'package:meter_scan/widget/MeterScanButton.dart';
 import 'package:meter_scan/widget/MeterScanTextField.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../backend/API/api.dart';
+import '../../backend/getx_model/loading_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController password = TextEditingController();
   bool _isChecked = true;
   bool flag = false;
+  final LoadingController loadingController = Get.put(LoadingController());
 
   autoLogin() async {
     setState(() => flag = true);
@@ -35,16 +38,15 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => flag = false);
       if (username != null && password != null) {
         SqfliteDatabase.getUser(
-            username, password, true, (value) => setState(() => flag = value));
-      } else {
-      }
+            username, password, firstTime, (value) => setState(() => flag = value));
+      } else {}
     } else {
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() => flag = false);
-        Get.to(const FetchDataScreen());
-      });
+      Api.collectUserDetails();
+      setState(() => flag = false);
     }
   }
+
+
 
   @override
   void initState() {
@@ -58,77 +60,71 @@ class _LoginScreenState extends State<LoginScreen> {
     var height = MediaQuery.of(context).size.height;
     return SafeArea(
       child: Scaffold(
-        body: SingleChildScrollView(
-          child: Container(
-            height: height,
-            padding: EdgeInsets.symmetric(
-                vertical: width * 0.04, horizontal: width * 0.04),
-            child: Stack(
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Image.asset(
-                      Assets.assetsMeterSnapLogoSlogan,
-                      width: width * 0.4,
-                      height: width * 0.5,
-                      scale: 3,
+        body: Container(
+          height: height,
+          padding: EdgeInsets.symmetric(
+              vertical: width * 0.04, horizontal: width * 0.04),
+          child: Stack(
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Image.asset(
+                    Assets.assetsMeterSnapLogoSlogan,
+                    width: width * 0.4,
+                    height: width * 0.5,
+                    scale: 3,
+                  ),
+                  MeterScanTextField(
+                    controller: username,
+                    label: "Username",
+                    hintText: "Jonh.wick",
+                  ),
+                  MeterScanTextField(
+                      controller: password,
+                      label: "Password",
+                      hintText: "*******",
+                      obscureText: true,
+                      suffixIcon: Icons.remove_red_eye_outlined),
+                  CustomCheckboxWithForgetPassword(
+                    isForgetPassword: false,
+                    onCheckboxTap: () => setState(
+                      () => _isChecked = !_isChecked,
                     ),
-                    // const Text("Login", style: headingStyle),
-                    // SizedBox
-                    //   height: width * 0.04,
-                    // ),
-                    MeterScanTextField(
-                      controller: username,
-                      label: "Username",
-                      hintText: "Nasir Ahmed",
-                    ),
-                    MeterScanTextField(
-                        controller: password,
-                        label: "Password",
-                        hintText: "*******",
-                        obscureText: true,
-                        suffixIcon: Icons.remove_red_eye_outlined),
-                    CustomCheckboxWithForgetPassword(
-                      isForgetPassword: false,
-                      onCheckboxTap: () => setState(
-                        () => _isChecked = !_isChecked,
-                      ),
-                      isChecked: _isChecked,
-                      onForgetPasswordTap: () {},
-                    ),
-                    SizedBox(
-                      height: width * 0.05,
-                    ),
-                    MeterScanButton(
-                        onTap: () => SqfliteDatabase.getUser(
-                            username.text,
-                            password.text,
-                            _isChecked,
-                            (value) => setState(() => flag = value)),
-                        width: width,
-                        label: "Login"),
-                    SizedBox(
-                      height: width * 0.05,
-                    ),
-                  ],
-                ),
-                flag
-                    ? Container(
-                        color: Colors.white.withOpacity(0.7),
-                        child: const Center(
-                          child: LoadingIndicator(
-                            indicatorType: Indicator.ballScale,
-                            colors: [themeColor1],
-                            strokeWidth: 1,
-                            backgroundColor: Colors.transparent,
-                          ),
+                    isChecked: _isChecked,
+                    onForgetPasswordTap: () {},
+                  ),
+                  SizedBox(
+                    height: width * 0.05,
+                  ),
+                  MeterScanButton(
+                      onTap: () => SqfliteDatabase.getUser(
+                          username.text,
+                          password.text,
+                          _isChecked,
+                          (value) => setState(() => flag = value)),
+                      width: width,
+                      label: "Login"),
+                  SizedBox(
+                    height: width * 0.05,
+                  ),
+                ],
+              ),
+              flag
+                  ? Container(
+                      color: Colors.white.withOpacity(0.7),
+                      child: const Center(
+                        child: LoadingIndicator(
+                          indicatorType: Indicator.ballScale,
+                          colors: [themeColor1],
+                          strokeWidth: 1,
+                          backgroundColor: Colors.transparent,
                         ),
-                      )
-                    : const SizedBox(),
-              ],
-            ),
+                      ),
+                    )
+                  : const SizedBox(),
+            ],
           ),
         ),
       ),

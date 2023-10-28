@@ -1,12 +1,12 @@
 class UserModel {
-  final int cmuserAppId;
+  final String isLock;
   final String fullName;
   final String userName;
   final String password;
   final String status;
 
   UserModel({
-    required this.cmuserAppId,
+    required this.isLock,
     required this.fullName,
     required this.userName,
     required this.password,
@@ -15,7 +15,7 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      cmuserAppId: json['cmuser_app_id'],
+      isLock: json['is_locked'],
       fullName: json['full_name'],
       userName: json['user_name'],
       password: json['password'],
@@ -25,7 +25,7 @@ class UserModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'cmuser_app_id': cmuserAppId,
+      'is_locked': isLock,
       'full_name': fullName,
       'user_name': userName,
       'password': password,

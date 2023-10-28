@@ -84,7 +84,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
           CustomerMeterRecordModel record = CustomerMeterRecordModel(
               lineID: widget.customer.lineId!,
               meterNumber: widget.customer.meterNo!,
-              readingDate: date.text.toString(),
+              readingDate: formatCustomDate(date.text.toString()),
               currentReading: int.parse(_numberController.text),
               custID: widget.customer.customerId!,
               imageName: "${widget.customer.customerId!} $timestamp",
@@ -114,7 +114,15 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
       Get.snackbar("Reading not Found", "Please insert a reading");
     }
   }
+  String formatCustomDate(String originalDate) {
+    // Parse the original date into a DateTime object
+    DateTime dateTime = DateFormat('dd-MM-yyyy').parse(originalDate);
 
+    // Format the date in the desired format
+    String formattedDate = DateFormat('dd-MMM-yyyy').format(dateTime).toUpperCase();
+
+    return formattedDate;
+  }
   getImage() async {
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
     if (photo != null) {
@@ -232,10 +240,13 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
                     ),
                   ],
                 ),
-                MeterScanTextField(
-                  controller: date,
-                  label: "Reading Date",
-                  hintText: date.text,
+                IgnorePointer(
+                  ignoring: true,
+                  child: MeterScanTextField(
+                    controller: date,
+                    label: "Reading Date",
+                    hintText: date.text,
+                  ),
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: width * 0.04),
