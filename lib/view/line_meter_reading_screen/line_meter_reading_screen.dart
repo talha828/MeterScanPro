@@ -39,6 +39,7 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
   final masterData = Get.put(MasterController());
   bool imageFlag = false;
   bool loading = false;
+  bool isSaved = false;
   String newReading = "11";
   File? file;
   Uint8List? bytesImage;
@@ -62,6 +63,7 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
           TextEditingController(text: data.currentReading.toString());
       date = TextEditingController(text: data.readingDate);
       imageFlag = true;
+      isSaved = true;
       setState(() {});
     }
   }
@@ -174,11 +176,9 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: themeColor1,
-          title: Text(
-            masterData.masterData.value.lineMaster!
-                .firstWhere((element) => element.lineId == widget.line.lineId)
-                .lineName!,
-            style: const TextStyle(color: Colors.white),
+          title:const Text(
+            "Line Meter",
+            style: TextStyle(color: Colors.white),
           ),
           leading: IconButton(
             icon: const Icon(
@@ -190,7 +190,7 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
         ),
         body: SingleChildScrollView(
           child: Container(
-            height: height - 100,
+            height: height,
             padding: EdgeInsets.symmetric(
                 vertical: width * 0.04, horizontal: width * 0.04),
             child: Column(
@@ -199,6 +199,12 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: width * 0.04),
+                      child: Text(masterData.masterData.value.lineMaster!
+                          .firstWhere((element) => element.lineId == widget.line.lineId)
+                          .lineName!,textAlign: TextAlign.start,style:TextStyle(fontWeight: FontWeight.bold,fontSize: width * 0.05) ,),
+                    ),
                     Text(
                       "Meter Reading",
                       style: TextStyle(
@@ -270,12 +276,15 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
                           width: width,
                           height: width,
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(50),
+                            borderRadius: BorderRadius.circular(20),
                             child: file == null
                                 ? Image.memory(
                                     bytesImage!,
+                              fit: BoxFit.cover,
                                   )
-                                : Image.file(file!),
+                                : Image.file(file!,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       )
@@ -298,7 +307,7 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
                                 height: width * 0.2,
                               ),
                               Text(
-                                "Take Customer Meter Image",
+                                "Take Line Meter Image",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
@@ -309,7 +318,7 @@ class _LineMeterReadingScreenState extends State<LineMeterReadingScreen> {
                           ),
                         ),
                       ),
-                Expanded(
+                isSaved?Container():Expanded(
                     child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

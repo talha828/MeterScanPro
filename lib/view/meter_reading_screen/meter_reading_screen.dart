@@ -39,6 +39,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
       text: DateFormat('dd-MM-yyyy').format(DateTime.now()));
   bool imageFlag = false;
   bool loading = false;
+  bool isSaved = false;
   String newReading = "11";
   File? file;
   Uint8List? bytesImage;
@@ -47,12 +48,13 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
         await SqfliteDatabase.loadRecordByMeterAndCustID(
             widget.customer.meterNo!, widget.customer.customerId!);
     if (data != null) {
-      bytesImage = Base64Decoder().convert(data.body);
+      bytesImage = base64Decode(data.body);
       // file = File.fromRawPath(bytesImage!);
       _numberController =
           TextEditingController(text: data.currentReading.toString());
       date = TextEditingController(text: data.readingDate);
       imageFlag = true;
+      isSaved = true;
       setState(() {});
     }
   }
@@ -67,13 +69,14 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
           print("=== get location ===");
           var ff = await _geolocatorPlatform.requestPermission();
           bool df = await _geolocatorPlatform.isLocationServiceEnabled();
-          if(df == false){
+          if (df == false) {
             bool df = await _geolocatorPlatform.openLocationSettings();
           }
           Position? position = await _geolocatorPlatform.getLastKnownPosition();
 
-          if(position == null){
-            Get.snackbar("Location Error", "Please Enable your location and restart your application");
+          if (position == null) {
+            Get.snackbar("Location Error",
+                "Please Enable your location and restart your application");
           }
           print("=== get timestamp ===");
           final timestamp =
@@ -90,8 +93,10 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
               imageName: "${widget.customer.customerId!} $timestamp",
               mimeType: 'image/jpeg',
               imageSize: await file!.length(),
-              latitude:  position== null?"123123":position!.latitude.toString(),
-              longitude: position== null?"123123":position.longitude.toString(),
+              latitude:
+                  position == null ? "123123" : position!.latitude.toString(),
+              longitude:
+                  position == null ? "123123" : position.longitude.toString(),
               capturedBy: name!,
               capturedOn: timestamp.toString(),
               syncBy: widget.customer.customerName!,
@@ -114,15 +119,18 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
       Get.snackbar("Reading not Found", "Please insert a reading");
     }
   }
+
   String formatCustomDate(String originalDate) {
     // Parse the original date into a DateTime object
     DateTime dateTime = DateFormat('dd-MM-yyyy').parse(originalDate);
 
     // Format the date in the desired format
-    String formattedDate = DateFormat('dd-MMM-yyyy').format(dateTime).toUpperCase();
+    String formattedDate =
+        DateFormat('dd-MMM-yyyy').format(dateTime).toUpperCase();
 
     return formattedDate;
   }
+
   getImage() async {
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
     if (photo != null) {
@@ -177,7 +185,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
         appBar: AppBar(
           backgroundColor: themeColor1,
           title: Text(
-            widget.customer.customerName!,
+            "Customer Meter",
             style: const TextStyle(color: Colors.white),
           ),
           leading: IconButton(
@@ -190,12 +198,21 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
         ),
         body: SingleChildScrollView(
           child: Container(
-            height: height - 100,
+            height: height,
             padding: EdgeInsets.symmetric(
                 vertical: width * 0.04, horizontal: width * 0.04),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: width * 0.04),
+                  child: Text(
+                    widget.customer.customerName!,
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: width * 0.05),
+                  ),
+                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -274,8 +291,12 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
                             child: file == null
                                 ? Image.memory(
                                     bytesImage!,
+                                    fit: BoxFit.cover,
                                   )
-                                : Image.file(file!),
+                                : Image.file(
+                                    file!,
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                         ),
                       )
@@ -309,19 +330,22 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
                           ),
                         ),
                       ),
-                Expanded(
-                    child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Center(
-                      child: MeterScanButton(
-                        onTap: () => insertData(),
-                        width: width,
-                        label: "Save",
+                isSaved
+                    ? Container()
+                    : Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Center(
+                              child: MeterScanButton(
+                                onTap: () => insertData(),
+                                width: width,
+                                label: "Save",
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ))
               ],
             ),
           ),

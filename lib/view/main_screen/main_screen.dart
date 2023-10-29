@@ -120,7 +120,6 @@ class _MainScreenState extends State<MainScreen> {
         ),
         drawer: Drawer(
           child: ListView(
-            // padding: const EdgeInsets.all(0),
             children: [
               DrawerHeader(
                 padding: const EdgeInsets.symmetric(vertical: 5),
@@ -215,7 +214,7 @@ class _MainScreenState extends State<MainScreen> {
                       decoration: InputDecoration(
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 20),
-                        hintText: "Search Line Here",
+                        hintText: "Search Meter Here",
                         hintStyle: GoogleFonts.montserrat(
                           textStyle: TextStyle(
                             fontSize: width * 0.04,
@@ -239,11 +238,24 @@ class _MainScreenState extends State<MainScreen> {
                               : Colors.white,
                           onTap: () => Get.to(
                               CustomerScreen(lineMaster: filteredList[index])),
-                          title: Text(filteredList[index].lineName!),
-                          subtitle:Text("Customer No: ${filteredList[index].customerCount!.toString()}"),
-                          leading: Text(
-                            filteredList[index].lineId!.toString(),
-                            style: const TextStyle(fontSize: 24),
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text("Line Name"),
+                              SizedBox(height: width * 0.02,),
+                              Text(filteredList[index].lineName!),
+                            ],
+                          ),
+                          subtitle:Text("Total Customer: ${filteredList[index].customerCount!.toString()}"),
+                          leading: Column(
+                            children: [
+                              Text("Line Id"),
+                              SizedBox(height: width * 0.02,),
+                              Text(
+                                filteredList[index].lineId!.toString(),
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                            ],
                           ),
                           trailing: const Icon(Icons.arrow_forward_ios_rounded),
                         );

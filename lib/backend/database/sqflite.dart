@@ -329,7 +329,7 @@ class SqfliteDatabase {
     final List<Map<String, dynamic>> result = await db.query(
       'customer_line_data',
       where: 'CustID = ? AND MeterNumber = ? AND ReadingDate = ?',
-      whereArgs: [custID, meterNo, currentDate],
+      whereArgs: [custID, meterNo, formatCustomDate(currentDate)],
     );
 
     if (result.isNotEmpty) {
@@ -364,7 +364,7 @@ class SqfliteDatabase {
     final List<Map<String, dynamic>> result = await db.query(
       'line_data',
       where: 'LineID = ? AND ReadingDate = ?',
-      whereArgs: [lineId, currentDate],
+      whereArgs: [lineId, formatCustomDate(currentDate)],
     );
 
     if (result.isNotEmpty) {

@@ -98,9 +98,9 @@ class _CustomerScreenState extends State<CustomerScreen> {
             ),
             appBar: AppBar(
               backgroundColor: themeColor1,
-              title: Text(
-                widget.lineMaster.lineName!,
-                style: const TextStyle(color: Colors.white),
+              title:const Text(
+                "Customers",
+                style: TextStyle(color: Colors.white),
               ),
               leading: IconButton(
                 icon: const Icon(
@@ -123,6 +123,10 @@ class _CustomerScreenState extends State<CustomerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: width * 0.04),
+                    child: Text(widget.lineMaster.lineName!,textAlign: TextAlign.center,style:TextStyle(fontWeight: FontWeight.bold,fontSize: width * 0.05) ,),
+                  ),
                   Container(
                     margin: EdgeInsets.symmetric(
                         vertical: width * 0.04, horizontal: width * 0.04),
