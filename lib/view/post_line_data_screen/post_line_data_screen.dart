@@ -115,9 +115,23 @@ class _PostLineDataScreenState extends State<PostLineDataScreen> {
                         style: TextStyle(fontSize: width * 0.05),
                       ),
                       title: Text(list![index].syncBy),
-                      trailing: Text(
-                        list![index].readingDate,
-                        style: TextStyle(fontSize: width * 0.04),
+                      trailing: Column(
+                        children: [
+                          Text(
+                            "Meter No",
+                            style: TextStyle(fontSize: width * 0.03,),
+                          ),
+                          SizedBox(height: width * 0.015,),
+                          Text(list![index].meterNumber,
+                            style: TextStyle(fontSize: width * 0.04,color: Colors.black,fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: width * 0.015,),
+                          Text(
+                            list![index].readingDate,
+                            style: TextStyle(fontSize: width * 0.03),
+                          ),
+
+                        ],
                       ),
                       subtitle:
                       Text("Reading : ${list![index].currentReading}"),

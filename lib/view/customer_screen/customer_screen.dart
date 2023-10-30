@@ -7,6 +7,7 @@ import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/backend/model/CustomerCombineModel.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/view/line_meter_reading_screen/line_meter_reading_screen.dart';
+import 'package:meter_scan/view/line_screen/line_screen.dart';
 import 'package:meter_scan/view/main_screen/main_screen.dart';
 import 'package:meter_scan/view/meter_reading_screen/meter_reading_screen.dart';
 
@@ -38,9 +39,11 @@ class _CustomerScreenState extends State<CustomerScreen> {
     // ff();
     mergeCustomers();
   }
-  void ff()async{
+
+  void ff() async {
     await SqfliteDatabase.printCustomerLineData();
   }
+
   void mergeCustomers() async {
     List<CustomerCombined> mergedCustomers = [];
     var detailsList = masterData.masterData.value.customerDetail!;
@@ -80,7 +83,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     return WillPopScope(
-      onWillPop:()async{
+      onWillPop: () async {
         Get.to(const MainScreen());
         return false;
       },
@@ -89,7 +92,9 @@ class _CustomerScreenState extends State<CustomerScreen> {
             floatingActionButton: FloatingActionButton.extended(
               backgroundColor: themeColor1,
               onPressed: () => Get.to(
-                LineMeterReadingScreen(line:masterData.masterData.value.lineDetail!.firstWhere((element) => element.lineId == widget.lineMaster.lineId)),
+                LineScreen(
+                  lineMaster: widget.lineMaster,
+                ),
               ),
               label: const Text(
                 "Line Meter Reading",
@@ -98,7 +103,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
             ),
             appBar: AppBar(
               backgroundColor: themeColor1,
-              title:const Text(
+              title: const Text(
                 "Customers",
                 style: TextStyle(color: Colors.white),
               ),
@@ -125,7 +130,12 @@ class _CustomerScreenState extends State<CustomerScreen> {
                 children: [
                   Padding(
                     padding: EdgeInsets.only(top: width * 0.04),
-                    child: Text(widget.lineMaster.lineName!,textAlign: TextAlign.center,style:TextStyle(fontWeight: FontWeight.bold,fontSize: width * 0.05) ,),
+                    child: Text(
+                      widget.lineMaster.lineName!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: width * 0.05),
+                    ),
                   ),
                   Container(
                     margin: EdgeInsets.symmetric(
@@ -164,7 +174,9 @@ class _CustomerScreenState extends State<CustomerScreen> {
                               leading: Column(
                                 children: [
                                   Text("Customer Id"),
-                                  SizedBox(height: width * 0.02,),
+                                  SizedBox(
+                                    height: width * 0.02,
+                                  ),
                                   Text(
                                     filteredList[index]!.customerId!.toString(),
                                     style: TextStyle(fontSize: width * 0.05),
@@ -177,7 +189,9 @@ class _CustomerScreenState extends State<CustomerScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text("Customer Name"),
-                                  SizedBox(height: width * 0.02,),
+                                  SizedBox(
+                                    height: width * 0.02,
+                                  ),
                                   Text(filteredList[index]!.customerName!),
                                 ],
                               ),

@@ -32,7 +32,7 @@ class MeterReadingScreen extends StatefulWidget {
 
 class _MeterReadingScreenState extends State<MeterReadingScreen> {
   final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
-
+  bool isEditable = false;
   TextEditingController _numberController = TextEditingController();
   final ImagePicker picker = ImagePicker();
   TextEditingController date = TextEditingController(
@@ -44,17 +44,17 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
   File? file;
   Uint8List? bytesImage;
   getAutoData() async {
-    CustomerMeterRecordModel? data =
-        await SqfliteDatabase.loadRecordByMeterAndCustID(
+    CustomerMeterRecordModel? data = await SqfliteDatabase.loadRecordByMeterAndCustID(
             widget.customer.meterNo!, widget.customer.customerId!);
     if (data != null) {
       bytesImage = base64Decode(data.body);
-      // file = File.fromRawPath(bytesImage!);
+
       _numberController =
           TextEditingController(text: data.currentReading.toString());
       date = TextEditingController(text: data.readingDate);
       imageFlag = true;
       isSaved = true;
+      isEditable = true;
       setState(() {});
     }
   }
@@ -62,7 +62,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
   insertData() async {
     if (_numberController.text.isNotEmpty) {
       if (date.text.isNotEmpty) {
-        if (file != null) {
+        if (isEditable?bytesImage != null:file != null) {
           print("=== get username ===");
           SharedPreferences prefer = await SharedPreferences.getInstance();
           String? name = prefer.getString("username");
@@ -82,17 +82,20 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
           final timestamp =
               DateTime.now().millisecondsSinceEpoch; // Generate a timestamp
           print("=== create record ===");
-          List<int> bytes = await file!.readAsBytes();
-          String base64 = base64Encode(bytes);
+          List<int>? bytes;
+          if(isEditable == false){
+            bytes = await file!.readAsBytes();
+          }
+          String base64 = base64Encode(isEditable?(file!=null?file!.readAsBytesSync():bytesImage!):bytes!);
           CustomerMeterRecordModel record = CustomerMeterRecordModel(
               lineID: widget.customer.lineId!,
               meterNumber: widget.customer.meterNo!,
-              readingDate: formatCustomDate(date.text.toString()),
+              readingDate: isEditable?date.text.toString():formatCustomDate(date.text.toString()),
               currentReading: int.parse(_numberController.text),
               custID: widget.customer.customerId!,
               imageName: "${widget.customer.customerId!} $timestamp",
               mimeType: 'image/jpeg',
-              imageSize: await file!.length(),
+              imageSize: isEditable?bytesImage!.length:await file!.length(),
               latitude:
                   position == null ? "123123" : position!.latitude.toString(),
               longitude:
@@ -103,7 +106,11 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
               syncOn: timestamp.toString(),
               body: base64);
           print("=== insert record ===");
-          await SqfliteDatabase.insertCustomerRecord(record);
+          if(isEditable){
+            await SqfliteDatabase.updateCustomerRecord(record);
+          }else{
+            await SqfliteDatabase.insertCustomerRecord(record);
+          }
           Get.to(CustomerScreen(
               lineMaster: LineMaster(
             lineId: widget.customer.lineId,
@@ -346,6 +353,21 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
                           ],
                         ),
                       ),
+                isEditable
+                    ? Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Center(
+                        child: MeterScanButton(
+                          onTap: () => insertData(),
+                          width: width,
+                          label: "Edit Record",
+                        ),
+                      ),
+                    ],
+                  ),
+                ):Container(),
               ],
             ),
           ),

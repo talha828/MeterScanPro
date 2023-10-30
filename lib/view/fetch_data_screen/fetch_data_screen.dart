@@ -6,6 +6,7 @@ import 'package:meter_scan/backend/getx_model/loading_controller.dart';
 import 'package:meter_scan/constant/constant.dart';
 import 'package:meter_scan/generated/assets.dart';
 import 'package:meter_scan/widget/MeterScanButton.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FetchDataScreen extends StatefulWidget {
   const FetchDataScreen({super.key});
@@ -57,8 +58,10 @@ class _FetchDataScreenState extends State<FetchDataScreen> {
                     ),
                   ),
                   MeterScanButton(
-                      onTap: () {
+                      onTap: () async{
                         setLoading(true);
+                        SharedPreferences prefer = await SharedPreferences.getInstance();
+                        prefer.setBool("firstTime", false);
                         Api.collectMasterDetails().catchError((onError) {
                           setLoading(false);
                         });

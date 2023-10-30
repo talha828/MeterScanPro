@@ -157,14 +157,16 @@ class LineDetail {
   String? meterName;
   int? meterId;
   int? meterPower;
+  bool? isRecord;
 
-  LineDetail({this.lineId, this.meterName, this.meterId, this.meterPower});
+  LineDetail({this.lineId, this.meterName, this.meterId, this.meterPower,this.isRecord});
 
   LineDetail.fromJson(Map<String, dynamic> json) {
     lineId = json['line_id'];
     meterName = json['meter_name'];
     meterId = json['meter_id'];
     meterPower = json['meter_power'];
+    isRecord = false;
   }
 
   Map<String, dynamic> toJson() {

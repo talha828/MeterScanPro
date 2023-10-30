@@ -196,6 +196,27 @@ class SqfliteDatabase {
       record.toMap(),
     );
   }
+  static Future<void> updateCustomerRecord(
+      CustomerMeterRecordModel record) async {
+    final db = await database;
+    List<Map<String, dynamic>> records = await db.query(
+      'customer_line_data',
+      columns: ['Id'],
+      where: 'CustID = ? AND ReadingDate = ? AND LineID = ?',
+      whereArgs: [record.custID, record.readingDate, record.lineID],
+    );
+    if (records.isNotEmpty) {
+      int id = records[0]['Id'];
+
+      // Update the record using the found 'Id'
+      await db.update(
+        'customer_line_data',
+        record.toMap(),
+        where: 'Id = ?',
+        whereArgs: [id],
+      );
+    }
+  }
 
   static Future<void> insertAllUsers(List<UserModel> users) async {
     final db = await database;
@@ -232,14 +253,24 @@ class SqfliteDatabase {
               indicator(false);
               Get.to(const FetchDataScreen());
             } else {
+              SharedPreferences prefer = await SharedPreferences.getInstance();
+              prefer.setString("username", userName);
+              prefer.setString("password", password);
               indicator(false);
               Get.to(const MainScreen());
             }
           }
         } else {
           indicator(false);
-          Get.snackbar(
-              "Authentication fail", "Please check your username or password");
+          SharedPreferences prefer = await SharedPreferences.getInstance();
+          bool? logout = prefer.getBool("logout");
+          if(logout == true){
+
+          } else{
+            Get.snackbar(
+                "Authentication fail", "Please check your username or password");
+
+          }
         }
       } else {
         indicator(false);
@@ -310,6 +341,22 @@ class SqfliteDatabase {
     // If the result is not empty, a matching record exists
     return result.isNotEmpty;
   }
+  static Future<bool> doesLineMeterRecordExistForToday(int lineId,int meterId) async {
+    final db = await database;
+
+    // Get the current date in the same format as readingDate in the database
+    final currentDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+
+    // Query the database to check if a record with the given custId, meterNo, and today's date exists
+    final result = await db.query(
+      'line_data',
+      where: 'LineID = ? AND ReadingDate = ? AND MeterNumber = ?',
+      whereArgs: [lineId, formatCustomDate(currentDate),meterId],
+    );
+
+    // If the result is not empty, a matching record exists
+    return result.isNotEmpty;
+  }
 
   static Future<void> printCustomerLineData() async {
     final db = await database;
@@ -318,6 +365,7 @@ class SqfliteDatabase {
         await db.query('customer_line_data');
 
     for (var record in records) {
+      print(record);
       print(record);
     }
   }
@@ -359,13 +407,13 @@ class SqfliteDatabase {
   }
 
   static Future<LineMeterRecordModel?> loadLineRecordByMeterAndCustID(
-      int lineId) async {
+      int lineId,int meterId) async {
     final db = await database;
     final currentDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
     final List<Map<String, dynamic>> result = await db.query(
       'line_data',
-      where: 'LineID = ? AND ReadingDate = ?',
-      whereArgs: [lineId, formatCustomDate(currentDate)],
+      where: 'LineID = ? AND ReadingDate = ? AND MeterNumber = ?',
+      whereArgs: [lineId, formatCustomDate(currentDate),meterId],
     );
 
     if (result.isNotEmpty) {
@@ -464,6 +512,27 @@ class SqfliteDatabase {
       record.toMap(),
     );
   }
+  static Future<void> updateLineRecord(LineMeterRecordModel record) async {
+    final db = await database;
+    List<Map<String, dynamic>> records = await db.query(
+      'line_data',
+      columns: ['Id'],
+      where: 'ReadingDate = ? AND LineID = ?',
+      whereArgs: [ record.readingDate, record.lineID],
+    );
+    if (records.isNotEmpty) {
+      int id = records[0]['Id'];
+
+      // Update the record using the found 'Id'
+      await db.update(
+        'line_data',
+        record.toMap(),
+        where: 'Id = ?',
+        whereArgs: [id],
+      );
+    }
+  }
+
   static Future<void> deleteRecordFromDatabase(int customerID, String meterNumber) async {
     try {
       final db = await database;

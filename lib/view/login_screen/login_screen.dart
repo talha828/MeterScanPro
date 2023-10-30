@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
     String? username = prefer.getString("username");
     String? password = prefer.getString("password");
     bool? firstTime = prefer.getBool("firstTime");
-    prefer.setBool("firstTime", false);
+    bool? logout = prefer.getBool("logout");
     if (firstTime != null) {
       setState(() => flag = false);
       if (username != null && password != null) {
@@ -99,11 +99,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: width * 0.05,
                   ),
                   MeterScanButton(
-                      onTap: () => SqfliteDatabase.getUser(
+                      onTap: () async{
+                        SharedPreferences prefer = await SharedPreferences.getInstance();
+                        bool? firstTime = prefer.getBool("firstTime");
+                        await prefer.setBool("logout", false);
+                        SqfliteDatabase.getUser(
                           username.text.toLowerCase(),
                           password.text,
-                          _isChecked,
-                          (value) => setState(() => flag = value)),
+                            firstTime == null?true:false,
+                          (value) => setState(() => flag = value));},
                       width: width,
                       label: "Login"),
                   SizedBox(

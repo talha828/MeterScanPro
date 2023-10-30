@@ -168,6 +168,7 @@ class _MainScreenState extends State<MainScreen> {
                       await SharedPreferences.getInstance();
                   prefer.setString("username", "null");
                   prefer.setString("password", "null");
+                  prefer.setBool("logout", true);
                   Get.to(const LoginScreen());
                 },
               ),
