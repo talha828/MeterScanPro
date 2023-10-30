@@ -142,7 +142,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
                       decoration: InputDecoration(
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 20),
-                        hintText: "Search Line Here",
+                        hintText: "Search Meter Here",
                         hintStyle: GoogleFonts.montserrat(
                           textStyle: TextStyle(
                             fontSize: width * 0.04,
@@ -161,13 +161,26 @@ class _CustomerScreenState extends State<CustomerScreen> {
                               tileColor: filteredList[index].recordStatus!
                                   ? themeColor1.withOpacity(0.2)
                                   : Colors.white,
-                              leading: Text(
-                                filteredList[index]!.customerId!.toString(),
-                                style: TextStyle(fontSize: width * 0.05),
+                              leading: Column(
+                                children: [
+                                  Text("Customer Id"),
+                                  SizedBox(height: width * 0.02,),
+                                  Text(
+                                    filteredList[index]!.customerId!.toString(),
+                                    style: TextStyle(fontSize: width * 0.05),
+                                  ),
+                                ],
                               ),
                               onTap: () => Get.to(MeterReadingScreen(
                                   customer: filteredList[index]!)),
-                              title: Text(filteredList[index]!.customerName!),
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Customer Name"),
+                                  SizedBox(height: width * 0.02,),
+                                  Text(filteredList[index]!.customerName!),
+                                ],
+                              ),
                               subtitle: Text(
                                   "Meter No : ${filteredList[index]!.meterNo}"),
                               trailing:
