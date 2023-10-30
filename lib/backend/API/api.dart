@@ -84,6 +84,7 @@ class Api {
             throw Exception('Failed to load data');
           }
         } catch (e) {
+          print(e.toString());
           loadingController.toggleFlag(false);
           Get.snackbar(
             "Something Went Wrong",

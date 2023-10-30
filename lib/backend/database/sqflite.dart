@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:meter_scan/backend/API/api.dart';
 import 'package:meter_scan/backend/model/CustomerAndLineModel.dart';
 import 'package:meter_scan/backend/model/CustomerMeterRecordModel.dart';
 import 'package:meter_scan/backend/model/LineMeterRecordModel.dart';
@@ -451,6 +452,8 @@ class SqfliteDatabase {
     await db.delete('customer_master');
     await db.delete('line_master');
     await db.delete('line_detail');
+    await db.delete('users');
+    await Api.collectUserDetails();
     Get.to(const FetchDataScreen());
   }
 

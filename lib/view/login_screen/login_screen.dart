@@ -100,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   MeterScanButton(
                       onTap: () => SqfliteDatabase.getUser(
-                          username.text,
+                          username.text.toLowerCase(),
                           password.text,
                           _isChecked,
                           (value) => setState(() => flag = value)),

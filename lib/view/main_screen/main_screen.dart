@@ -148,7 +148,7 @@ class _MainScreenState extends State<MainScreen> {
               ListTile(
                 leading: const Icon(Icons.refresh),
                 title: const Text('Refresh Data'),
-                onTap: ()async => SqfliteDatabase.deleteAllRecord(),
+                onTap: ()async =>await SqfliteDatabase.deleteAllRecord(),
               ),
               ListTile(
                 leading: const Icon(Icons.send),

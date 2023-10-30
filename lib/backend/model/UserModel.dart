@@ -17,7 +17,7 @@ class UserModel {
     return UserModel(
       isLock: json['is_locked'],
       fullName: json['full_name'],
-      userName: json['user_name'],
+      userName: json['user_name'].toString().toLowerCase(),
       password: json['password'],
       status: json['status'],
     );
