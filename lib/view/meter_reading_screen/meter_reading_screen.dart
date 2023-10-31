@@ -243,7 +243,7 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> {
                               controller: _numberController,
                               inputFormatters: <TextInputFormatter>[
                                 FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(6),
+                                LengthLimitingTextInputFormatter(10),
                               ],
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
