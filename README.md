@@ -23,10 +23,10 @@ We propose a real-time image-based AI application, utilizing Flutter for mobile 
 ## Project Duration
 The project is expected to be completed in one month, emphasizing efficiency and rapid deployment.
 
-![df](https://github.com/talha828/MeterScanPro/assets/61588132/4c778315-ee51-44df-93ce-d0fcb336e2cb)
+![dd](https://github.com/talha828/MeterScanPro/assets/61588132/21770ccd-b5a3-41f4-870d-770a7fc29b0a)
 
 
-[Here is this lint](https://www.figma.com/file/sJbVUgTQ5B6KhMoGdrf3ec/Untitled?type=whiteboard&node-id=0%3A1&t=6izvg2mfjJx4gS7F-1)
+[Architecture link](https://www.figma.com/file/sJbVUgTQ5B6KhMoGdrf3ec/Untitled?type=whiteboard&node-id=0%3A1&t=6izvg2mfjJx4gS7F-1)
 
 ## User Research
 
@@ -37,8 +37,10 @@ Our UX approach includes:
 - A/B Testing: Comparing design variations for optimization.
 - Surveys and Feedback Analysis: Gathering and incorporating user feedback.
 
-![figma](https://github.com/talha828/MeterScanPro/assets/61588132/895b1e64-c742-4e7f-b9cb-308210564266)
-[here is figma file link](https://www.figma.com/file/1KC0LNwycCl1YKTf9opGOa/MeterScan?type=design&node-id=87%3A305&mode=design&t=WX0g3ceOEh57RSEA-1)
+![df](https://github.com/talha828/MeterScanPro/assets/61588132/101f7890-12ea-49d9-9ee2-a631039809b5)
+
+
+[figma link](https://www.figma.com/file/1KC0LNwycCl1YKTf9opGOa/MeterScan?type=design&node-id=87%3A305&mode=design&t=WX0g3ceOEh57RSEA-1)
 
 ### Summary
 User research reveals key needs and behaviors:
